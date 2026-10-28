@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="samudra" data-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#FFFFFF">
+<title>Upload Aja</title>
+<script>
+// Terapkan tema sebelum halaman tampil (hindari kedip)
+(function(){try{
+  var T=["samudra","zamrud","anggur","senja","grafit"],t=localStorage.getItem("theme"),m=localStorage.getItem("mode")||"auto",r=document.documentElement;
+  if(T.indexOf(t)>-1)r.dataset.theme=t;
+  r.dataset.mode=(m==="dark"||(m==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches))?"dark":"light";
+}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------- Warna dasar (terang / gelap) ---------- */
+:root{
+  --bg:#F4F6FA; --panel:#FFFFFF; --ink:#131B2B; --muted:#5C6878; --line:#E3E8F0; --soft:#EEF2F8; --shadow:rgba(20,30,60,.08);
+  --warn:#8A5600; --warn-bg:#FFF0CC; --danger:#B3372A; --danger-bg:#FBE9E6;
+  --accent:#2A44CC; --accent2:#4A6CF0; --on-accent:#FFFFFF;
+  --tint:color-mix(in srgb,var(--accent) 9%,transparent);
+}
+html[data-mode="dark"]{
+  --bg:#0C1118; --panel:#141B26; --ink:#E9EEF5; --muted:#9AA7B8; --line:#243040; --soft:#1B2432; --shadow:rgba(0,0,0,.45);
+  --warn:#F0B94A; --warn-bg:#2E2610; --danger:#F08A7A; --danger-bg:#34201D; --on-accent:#0B1020;
+  --tint:color-mix(in srgb,var(--accent) 14%,transparent);
+}
+/* ---------- Tema warna ---------- */
+html[data-theme="samudra"]{--accent:#2A44CC;--accent2:#4A6CF0}
+html[data-theme="samudra"][data-mode="dark"]{--accent:#93A8FF;--accent2:#6F8CFF}
+html[data-theme="zamrud"]{--accent:#0A7355;--accent2:#0E8F69}
+html[data-theme="zamrud"][data-mode="dark"]{--accent:#4FD6A0;--accent2:#34C28C}
+html[data-theme="anggur"]{--accent:#6531CC;--accent2:#8B4FE0}
+html[data-theme="anggur"][data-mode="dark"]{--accent:#B9A0FF;--accent2:#A084F5}
+html[data-theme="senja"]{--accent:#B83A0A;--accent2:#D04A14}
+html[data-theme="senja"][data-mode="dark"]{--accent:#FFA166;--accent2:#FF8A4C}
+html[data-theme="grafit"]{--accent:#1F2937;--accent2:#374559}
+html[data-theme="grafit"][data-mode="dark"]{--accent:#E3E9F2;--accent2:#BFC9D8}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;color-scheme:light}
+html[data-mode="dark"]{color-scheme:dark}
+body{margin:0;min-height:100vh;color:var(--ink);font:14px/1.5 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;background:var(--bg)}
+.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.i.sm{width:14px;height:14px}
+.i.lg{width:22px;height:22px}
+button,input,select,textarea{font:inherit;color:inherit}
+a.btn{text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- Header ---------- */
+.top{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+.top>div{max-width:1080px;margin:0 auto;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;margin:0;font-weight:800;font-size:16px;letter-spacing:-.02em}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.logo .i{width:16px;height:16px}
+.nav{display:flex;gap:4px}
+
+/* ---------- Tombol ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:10px;padding:0 12px;height:34px;font-weight:600;cursor:pointer;background:var(--soft);white-space:nowrap}
+.btn:hover{filter:brightness(.97)}
+.btn.primary{background:var(--accent);color:var(--on-accent);font-weight:700;height:40px;width:100%;border-radius:10px}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.primary:disabled{opacity:.55;cursor:progress}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--soft);color:var(--ink)}
+.btn.danger{background:var(--danger-bg);color:var(--danger);font-weight:700}
+.btn.danger:disabled{opacity:.55;cursor:progress}
+.btn.icon{width:30px;height:30px;padding:0}
+.btn.dl{height:30px;padding:0 11px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;border-radius:8px}
+.dot{display:none;width:7px;height:7px;border-radius:50%;background:var(--warn);margin-left:-2px}
+.on .dot{display:inline-block}
+@media(max-width:560px){.nav .lbl{display:none}.nav .btn{padding:0 10px}}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:16px}
+@media(min-width:920px){.wrap{grid-template-columns:340px minmax(0,1fr);align-items:start}.compose{position:sticky;top:68px}}
+
+/* ---------- Composer ---------- */
+.compose{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+.compose.over{border-color:var(--accent);box-shadow:0 0 0 3px var(--tint)}
+form{display:grid;gap:10px}
+.field{width:100%;border:1px solid transparent;background:var(--soft);border-radius:10px;padding:0 12px;height:36px}
+.field:focus{outline:none;border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 3px var(--tint)}
+textarea.field{height:auto;min-height:72px;max-height:220px;padding:10px 12px;resize:none;line-height:1.5}
+.field::placeholder{color:var(--muted)}
+
+.drop{position:relative;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 10px;padding:10px 12px;border-radius:10px;cursor:pointer;border:1.5px dashed var(--line);transition:background .15s,border-color .15s}
+.drop:hover,.compose.over .drop{background:var(--tint);border-color:var(--accent)}
+.drop .ic{grid-row:span 2;width:34px;height:34px;border-radius:9px;background:var(--tint);color:var(--accent);display:grid;place-items:center}
+.drop b{font-size:13.5px;font-weight:700;line-height:1.2;align-self:end}
+.drop .sub{font-size:12px;color:var(--muted);line-height:1.2;align-self:start}
+.drop:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+
+.chip{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:6px}
+.thumb{width:38px;height:38px;border-radius:8px;background:var(--panel);display:grid;place-items:center;overflow:hidden;color:var(--accent);flex:none}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.chip .info{min-width:0;flex:1;font-size:13.5px;line-height:1.3}
+.chip .info b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .info span{color:var(--muted);font-size:12.5px}
+
+.opt{display:grid;gap:8px}
+.switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;cursor:pointer;padding:2px 2px}
+.switch .sl{display:flex;align-items:center;gap:8px;font-weight:500}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.track{width:36px;height:21px;border-radius:999px;background:var(--line);position:relative;transition:background .15s;flex:none}
+.track::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.switch input:checked+.track{background:var(--accent)}
+.switch input:checked+.track::after{transform:translateX(15px)}
+.switch input:focus-visible+.track{outline:2px solid var(--accent);outline-offset:2px}
+.switch.off{opacity:.45;cursor:not-allowed}
+
+.seg{border:0;margin:0;padding:0;min-width:0}
+.seg legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.seg .opts{display:grid;grid-template-columns:repeat(4,1fr);background:var(--soft);border-radius:10px;padding:2px;gap:2px}
+.seg label{position:relative;display:block}
+.seg input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.seg span{display:block;text-align:center;padding:5px 2px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.seg input:checked+span{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px var(--shadow)}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:1px}
+progress{width:100%;height:6px;border:0;border-radius:6px;overflow:hidden;accent-color:var(--accent)}
+
+/* ---------- Daftar kiriman ---------- */
+.feed{min-width:0}
+.feedhead{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px}
+.feedhead h2{margin:0;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.feedhead small{color:var(--muted);font-weight:500;font-size:13px;margin-left:6px}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:11px 14px;animation:in .25s ease both}
+.row+.row,.row+.empty{border-top:1px solid var(--line)}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px}
+.head{display:flex;align-items:center;gap:8px;min-height:22px;flex-wrap:wrap}
+.name{font-weight:700;font-size:14px}
+.when{color:var(--muted);font-size:12.5px}
+.sp{flex:1}
+@media(max-width:520px){.sp{display:none}.head .icon{margin-left:auto}}
+.life{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.meter{display:block;width:34px;height:4px;border-radius:4px;background:var(--soft);overflow:hidden}
+.meter b{display:block;height:100%;background:var(--accent);border-radius:4px}
+.life.soon{color:var(--danger)}
+.life.soon .meter b{background:var(--danger)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-bg);border-radius:6px;padding:1px 7px}
+.text{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.text.clamp{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.acts{display:flex;flex-wrap:wrap;gap:0;margin:2px 0 0 -8px}
+.act{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;padding:3px 8px;border-radius:7px;cursor:pointer}
+.act:hover{background:var(--soft);color:var(--ink)}
+.act.ok{color:var(--accent)}
+
+.att{margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:460px}
+.pv{background:var(--soft);display:grid;place-items:center}
+.pv img,.pv video{display:block;max-width:100%;max-height:240px;width:auto;object-fit:contain}
+.pv video{background:#000;width:100%}
+.pv audio{width:100%;margin:10px}
+.pv a{display:block;line-height:0}
+.fbar{display:flex;align-items:center;gap:10px;padding:7px 8px}
+.pv+.fbar{border-top:1px solid var(--line)}
+.badge{width:34px;height:34px;border-radius:8px;background:var(--tint);color:var(--accent);display:grid;place-items:center;font-size:10px;font-weight:800;letter-spacing:.03em;flex:none}
+.fbar .t{min-width:0;flex:1;font-size:13px;line-height:1.3}
+.fbar .t b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fbar .t span{color:var(--muted);font-size:12px}
+@media(max-width:560px){.row{padding:10px 12px}.fbar{flex-wrap:wrap}.fbar .t{flex:1 1 calc(100% - 52px)}.fbar .btn.dl{flex:1}.fbar .btn.icon{margin-left:auto}.fbar .btn.icon+.btn.dl{margin-left:0}}
+.gone{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.empty{padding:32px 20px;text-align:center;color:var(--muted)}
+.empty .ic{width:40px;height:40px;border-radius:12px;background:var(--tint);color:var(--accent);display:grid;place-items:center;margin:0 auto 10px}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:2px}
+#more{margin:10px auto 0;display:flex}
+
+/* ---------- Dialog ---------- */
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--panel);color:var(--ink);width:min(400px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 8px 14px;border-bottom:1px solid var(--line);font-weight:800}
+.db{padding:14px;display:grid;gap:12px}
+#tools{display:grid;gap:12px}
+.db label.l,.db .l{font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px;font-weight:500}
+.db select.field{padding:0 10px}
+.chk{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;cursor:pointer}
+.chk input{margin-top:3px;accent-color:var(--accent)}
+.chk small{display:block;color:var(--muted);font-size:12.5px}
+.msg{font-size:13px;min-height:1.2em;color:var(--muted)}
+.msg.err{color:var(--danger)}
+.rowf{display:flex;gap:8px}
+.rowf .field{flex:1}
+
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
+.sw{display:grid;justify-items:center;gap:5px;padding:8px 4px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer;font-size:12.5px;font-weight:600}
+.sw i{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.sw:hover{background:var(--soft)}
+.sw[aria-pressed="true"]{border-color:var(--accent);background:var(--tint);color:var(--accent)}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--soft);border-radius:12px;padding:3px}
+.modes button{display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:transparent;border-radius:8px;padding:6px 4px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px var(--shadow)}
+
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .15s;max-width:calc(100vw - 32px);z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast.show{opacity:1}
+#toast.err{background:var(--danger);color:#fff}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cloud" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+</svg>
+
+<header class="top">
+  <div>
+    <h1 class="brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-cloud"/></svg></span>Upload Aja</h1>
+    <nav class="nav">
+      <button class="btn ghost" id="themeBtn" type="button" aria-label="Ubah tema"><svg class="i" aria-hidden="true"><use href="#i-drop"/></svg><span class="lbl">Tema</span></button>
+      <button class="btn ghost" id="adminBtn" type="button" aria-label="Admin"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span class="lbl">Admin</span><span class="dot"></span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="compose" id="compose" aria-label="Upload">
+    <form id="form">
+      <input class="field" id="name" type="text" maxlength="60" placeholder="Nama (boleh kosong)" autocomplete="name" aria-label="Nama">
+      <textarea class="field" id="text" rows="3" placeholder="Tulis catatan (opsional)" aria-label="Pesan"></textarea>
+
+      <label class="drop" id="drop">
+        <span class="ic"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg></span>
+        <b>Pilih atau seret file</b>
+        <span class="sub">Maks. 20 MB, bisa juga paste</span>
+        <input id="file" type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip">
+      </label>
+
+      <div class="chip" id="chip" hidden>
+        <div class="thumb" id="thumb"></div>
+        <div class="info"><b id="cname"></b><span id="csize"></span></div>
+        <button class="btn ghost icon" type="button" id="clear" aria-label="Lepas lampiran"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="opt">
+        <fieldset class="seg">
+          <legend>Simpan selama</legend>
+          <div class="opts">
+            <label><input type="radio" name="ttl" value="1"><span>1 hari</span></label>
+            <label><input type="radio" name="ttl" value="7" checked><span>7 hari</span></label>
+            <label><input type="radio" name="ttl" value="30"><span>30 hari</span></label>
+            <label><input type="radio" name="ttl" value="0"><span>Selamanya</span></label>
+          </div>
+        </fieldset>
+        <label class="switch off" id="onceBox">
+          <span class="sl"><svg class="i sm" aria-hidden="true"><use href="#i-lock"/></svg>Hapus setelah diunduh sekali</span>
+          <input type="checkbox" id="once" disabled>
+          <span class="track"></span>
+        </label>
+      </div>
+
+      <progress id="bar" max="100" value="0" hidden></progress>
+      <button class="btn primary" id="send" type="submit"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>Upload</button>
+    </form>
+  </section>
+
+  <section class="feed" aria-label="Kiriman">
+    <div class="feedhead">
+      <h2>Kiriman terbaru<small id="count"></small></h2>
+      <button class="btn ghost icon" id="refresh" type="button" aria-label="Muat ulang"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+    </div>
+    <div class="list" id="list"></div>
+    <button class="btn ghost" id="more" type="button" hidden>Muat lebih banyak</button>
+  </section>
+</main>
+
+<dialog id="tdlg" aria-labelledby="ttitle">
+  <div class="dh"><span id="ttitle">Tampilan</span><button class="btn ghost icon" type="button" id="tclose" aria-label="Tutup"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <div><span class="l">Warna tema</span><div class="themes" id="themes"></div></div>
+    <div><span class="l">Mode</span>
+      <div class="modes" id="modes">
+        <button type="button" data-mode="light" aria-pressed="false"><svg class="i sm" aria-hidden="true"><use href="#i-sun"/></svg>Terang</button>
+        <button type="button" data-mode="dark" aria-pressed="false"><svg class="i sm" aria-hidden="true"><use href="#i-moon"/></svg>Gelap</button>
+        <button type="button" data-mode="auto" aria-pressed="false"><svg class="i sm" aria-hidden="true"><use href="#i-monitor"/></svg>Otomatis</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlg" aria-labelledby="dtitle">
+  <div class="dh"><span id="dtitle">Admin</span><button class="btn ghost icon" type="button" id="dclose" aria-label="Tutup"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <div id="loginRow" class="rowf">
+      <input class="field" id="key" type="password" placeholder="Kunci admin" autocomplete="current-password" aria-label="Kunci admin">
+      <button class="btn primary" style="width:auto;height:40px;box-shadow:none" id="login" type="button">Masuk</button>
+    </div>
+    <div id="tools" hidden>
+      <div>
+        <label class="l" for="cdays">Hapus file yang lebih lama dari</label>
+        <select class="field" id="cdays"><option value="7">7 hari</option><option value="30" selected>30 hari</option><option value="90">90 hari</option></select>
+      </div>
+      <label class="chk"><input type="checkbox" id="callmsg"><span>Hapus juga teks pesannya<small>Jika tidak dicentang, teks tetap ada dan hanya file yang dihapus.</small></span></label>
+      <button class="btn danger" id="cleanup" type="button"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>Hapus file lama</button>
+      <div class="msg" id="cstatus" role="status" aria-live="polite"></div>
+      <button class="btn ghost" id="logout" type="button">Keluar dari admin</button>
+    </div>
+    <div class="msg" id="astatus" role="status" aria-live="polite"></div>
+  </div>
+</dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const MAX = 20 * 1024 * 1024;
+const $ = (id) => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+let cursor = null, picked = null, previewURL = null, adminKey = "", tt, shown = 0;
+try { adminKey = sessionStorage.getItem("adminKey") || ""; } catch {}
+try { $("name").value = localStorage.getItem("nama") || ""; } catch {}
+
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+function ico(name, small) { const s = document.createElementNS(NS, "svg"); s.setAttribute("class", "i" + (small ? " sm" : "")); s.setAttribute("aria-hidden", "true"); const u = document.createElementNS(NS, "use"); u.setAttribute("href", "#i-" + name); s.appendChild(u); return s; }
+const fmtSize = (n) => n > 1048576 ? (n / 1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+const fmtDate = (t) => new Date(t).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+const extOf = (n) => { const i = n.lastIndexOf("."); return i > 0 && i < n.length - 1 ? n.slice(i + 1, i + 5).toUpperCase() : "FILE"; };
+function ago(t) {
+  const s = (Date.now() - t) / 1000;
+  if (s < 60) return "baru saja";
+  if (s < 3600) return Math.floor(s / 60) + " menit lalu";
+  if (s < 86400) return Math.floor(s / 3600) + " jam lalu";
+  return new Date(t).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+}
+function left(ms) {
+  if (ms <= 0) return "kedaluwarsa";
+  if (ms >= 2 * 86400000) return Math.round(ms / 86400000) + " hari lagi";
+  if (ms >= 3600000) return Math.round(ms / 3600000) + " jam lagi";
+  return "sebentar lagi";
+}
+function toast(msg, err) { const t = $("toast"); t.textContent = msg; t.className = "show" + (err ? " err" : ""); clearTimeout(tt); tt = setTimeout(() => t.className = "", 3500); }
+function setMsg(id, msg, err) { const s = $(id); s.textContent = msg || ""; s.className = "msg" + (err ? " err" : ""); }
+function saveBlob(blob, name) {
+  const u = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 1500);
+}
+
+// ---- Tema ----
+const THEMES = [
+  ["samudra", "Samudra", "#2A44CC", "#4A6CF0"],
+  ["zamrud", "Zamrud", "#0A7355", "#14A37A"],
+  ["anggur", "Anggur", "#6531CC", "#9A5CF0"],
+  ["senja", "Senja", "#B83A0A", "#F08A2C"],
+  ["grafit", "Grafit", "#1F2937", "#5B6B82"],
+];
+const mq = matchMedia("(prefers-color-scheme: dark)");
+let theme = document.documentElement.dataset.theme, mode = "auto";
+try { mode = localStorage.getItem("mode") || "auto"; } catch {}
+function applyTheme() {
+  const dark = mode === "dark" || (mode === "auto" && mq.matches), r = document.documentElement;
+  r.dataset.theme = theme; r.dataset.mode = dark ? "dark" : "light";
+  document.querySelector('meta[name="theme-color"]').content = dark ? "#141B26" : "#FFFFFF";
+  document.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.theme === theme)));
+  document.querySelectorAll("#modes button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+}
+THEMES.forEach(([id, label, c1, c2]) => {
+  const b = el("button", "sw"); b.type = "button"; b.dataset.theme = id;
+  const dot = el("i"); dot.style.background = `linear-gradient(135deg,${c1},${c2})`;
+  b.append(dot, label);
+  b.addEventListener("click", () => { theme = id; try { localStorage.setItem("theme", id); } catch {} applyTheme(); });
+  $("themes").appendChild(b);
+});
+document.querySelectorAll("#modes button").forEach(b => b.addEventListener("click", () => { mode = b.dataset.mode; try { localStorage.setItem("mode", mode); } catch {} applyTheme(); }));
+mq.addEventListener("change", applyTheme);
+const tdlg = $("tdlg");
+$("themeBtn").addEventListener("click", () => tdlg.showModal());
+$("tclose").addEventListener("click", () => tdlg.close());
+tdlg.addEventListener("click", (e) => { if (e.target === tdlg) tdlg.close(); });
+applyTheme();
+
+// ---- Komposer ----
+const ta = $("text");
+ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 220) + "px"; });
+
+function setFile(f) {
+  if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
+  if (f && f.size > MAX) { toast("File terlalu besar. Maksimal 20 MB.", true); $("file").value = ""; f = null; }
+  picked = f || null;
+  $("chip").hidden = !picked; $("drop").hidden = !!picked;
+  $("once").disabled = !picked; $("onceBox").classList.toggle("off", !picked);
+  if (!picked) { $("once").checked = false; return; }
+  $("cname").textContent = picked.name; $("csize").textContent = fmtSize(picked.size);
+  const th = $("thumb"); th.textContent = "";
+  if (/^image\//.test(picked.type) && !/svg/.test(picked.type)) {
+    previewURL = URL.createObjectURL(picked);
+    const im = document.createElement("img"); im.src = previewURL; im.alt = ""; th.appendChild(im);
+  } else th.appendChild(ico(/^video\//.test(picked.type) ? "play" : "file"));
+}
+$("file").addEventListener("change", () => setFile($("file").files[0]));
+$("clear").addEventListener("click", () => { $("file").value = ""; setFile(null); });
+
+const box = $("compose");
+["dragenter", "dragover"].forEach(e => box.addEventListener(e, ev => { ev.preventDefault(); box.classList.add("over"); }));
+["dragleave", "drop"].forEach(e => box.addEventListener(e, ev => { ev.preventDefault(); box.classList.remove("over"); }));
+box.addEventListener("drop", ev => { const f = ev.dataTransfer.files[0]; if (f) { try { $("file").files = ev.dataTransfer.files; } catch {} setFile(f); } });
+ta.addEventListener("paste", ev => { const f = ev.clipboardData && ev.clipboardData.files[0]; if (f) { ev.preventDefault(); setFile(f); } });
+
+// ---- Daftar kiriman ----
+const pending = [];
+function fitClamps() { requestAnimationFrame(() => { while (pending.length) pending.shift()(); }); }
+function updateCount() { $("count").textContent = shown ? shown + " item" : ""; }
+async function copyText(t) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(t); return; } } catch {}
+  const a = document.createElement("textarea"); a.value = t; a.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+  document.body.appendChild(a); a.select();
+  const ok = document.execCommand("copy"); a.remove();
+  if (!ok) throw new Error("copy");
+}
+function avatar(name) {
+  const d = el("div", "av", (name.trim()[0] || "?").toUpperCase());
+  const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7);
+  d.style.background = `hsl(${Math.abs(h) % 360} 42% 38%)`;
+  return d;
+}
+function life(m) {
+  const s = el("span", "life"); s.appendChild(ico("clock", true));
+  if (!m.expiresAt) { s.append("Tanpa batas"); return s; }
+  const total = m.expiresAt - m.createdAt, rem = m.expiresAt - Date.now();
+  s.append(left(rem));
+  const mt = el("i", "meter"), b = document.createElement("b");
+  b.style.width = Math.round(Math.max(0, Math.min(1, rem / total)) * 100) + "%";
+  mt.appendChild(b); s.appendChild(mt);
+  if (rem < 86400000) s.classList.add("soon");
+  s.title = "Dihapus otomatis " + fmtDate(m.expiresAt);
+  return s;
+}
+function goneBox(text) { const g = el("div", "gone"); g.appendChild(ico("trash", true)); g.append(text); return g; }
+
+function attachment(m, body) {
+  const f = m.file, t = f.type;
+  const att = el("div", "att");
+  const viewable = !m.oneTime && (/^(image\/(?!svg)|video\/|audio\/)/.test(t) || t === "application/pdf");
+
+  if (!m.oneTime) {
+    if (/^image\//.test(t) && !/svg/.test(t)) {
+      const pv = el("div", "pv"), a = el("a"); a.href = f.url; a.target = "_blank"; a.rel = "noopener";
+      const i = document.createElement("img"); i.src = f.url; i.loading = "lazy"; i.alt = f.name; a.appendChild(i); pv.appendChild(a); att.appendChild(pv);
+    } else if (/^video\//.test(t)) {
+      const pv = el("div", "pv"), v = document.createElement("video"); v.src = f.url; v.controls = true; v.preload = "metadata"; v.playsInline = true; pv.appendChild(v); att.appendChild(pv);
+    } else if (/^audio\//.test(t)) {
+      const pv = el("div", "pv"), a = document.createElement("audio"); a.src = f.url; a.controls = true; pv.appendChild(a); att.appendChild(pv);
+    }
+  }
+
+  const bar = el("div", "fbar");
+  const sub = fmtSize(f.size) + (m.oneTime ? " · hanya bisa diunduh sekali" : "");
+  const info = el("span", "t"); info.append(el("b", "", f.name), el("span", "", sub));
+  bar.append(el("span", "badge", extOf(f.name)), info);
+
+  if (viewable) {
+    const op = el("a", "btn ghost icon"); op.href = f.url; op.target = "_blank"; op.rel = "noopener"; op.title = "Buka di tab baru"; op.setAttribute("aria-label", "Buka " + f.name);
+    op.appendChild(ico("open", true)); bar.appendChild(op);
+  }
+  const dl = el("a", "btn dl"); dl.href = m.oneTime ? f.url + "?dl=1" : f.url; dl.setAttribute("download", f.name);
+  dl.setAttribute("aria-label", "Download " + f.name); dl.append(ico("down", true), "Download");
+  if (m.oneTime) dl.addEventListener("click", () => setTimeout(() => att.replaceWith(goneBox("Sudah diunduh dan dihapus: " + f.name)), 2000));
+  bar.appendChild(dl);
+  att.appendChild(bar);
+  body.appendChild(att);
+}
+
+function render(m) {
+  const row = el("article", "row");
+  row.appendChild(avatar(m.name));
+  const body = el("div"); body.style.minWidth = "0"; row.appendChild(body);
+
+  const head = el("div", "head");
+  const when = el("span", "when", ago(m.createdAt)); when.title = fmtDate(m.createdAt);
+  head.append(el("span", "name", m.name), when, el("span", "sp"));
+  if (m.oneTime && m.file && !m.file.gone) { const tg = el("span", "tag"); tg.appendChild(ico("lock", true)); tg.append("Sekali unduh"); head.appendChild(tg); }
+  head.appendChild(life(m));
+  if (adminKey) {
+    const del = el("button", "btn ghost icon"); del.type = "button"; del.setAttribute("aria-label", "Hapus kiriman ini"); del.appendChild(ico("trash", true));
+    del.addEventListener("click", async () => {
+      if (!confirm("Hapus kiriman ini beserta filenya?")) return;
+      const r = await fetch("/api/messages?key=" + encodeURIComponent(m.key), { method: "DELETE", headers: { "x-admin-key": adminKey } });
+      if (r.ok) { row.remove(); shown = Math.max(0, shown - 1); updateCount(); toast("Kiriman dihapus."); } else toast((await r.json().catch(() => ({}))).error || "Gagal menghapus.", true);
+    });
+    head.appendChild(del);
+  }
+  body.appendChild(head);
+
+  if (m.text) {
+    const p = el("p", "text clamp", m.text); body.appendChild(p);
+    let full = m.truncated ? null : m.text, open = false;
+    const getFull = async () => {
+      if (full !== null) return full;
+      const r = await fetch("/api/messages?key=" + encodeURIComponent(m.key));
+      if (!r.ok) throw new Error("load");
+      full = (await r.json()).text; return full;
+    };
+    const acts = el("div", "acts");
+    const label = (b, icon, text) => { b.textContent = ""; b.append(ico(icon, true), text); };
+    const cp = el("button", "act"); cp.type = "button"; label(cp, "copy", "Salin");
+    const dt = el("button", "act"); dt.type = "button"; label(dt, "down", "Unduh");
+    const tg = el("button", "act", "Selengkapnya"); tg.type = "button"; tg.hidden = !m.truncated;
+    cp.addEventListener("click", async () => {
+      try {
+        await copyText(await getFull());
+        cp.classList.add("ok"); label(cp, "check", "Tersalin");
+        setTimeout(() => { cp.classList.remove("ok"); label(cp, "copy", "Salin"); }, 1800);
+      } catch { toast("Gagal menyalin teks.", true); }
+    });
+    dt.addEventListener("click", async () => {
+      try {
+        const txt = await getFull(), d = new Date(m.createdAt).toISOString().slice(0, 10);
+        saveBlob(new Blob([txt], { type: "text/plain;charset=utf-8" }), "upload-aja-" + d + ".txt");
+      } catch { toast("Gagal mengunduh teks.", true); }
+    });
+    tg.addEventListener("click", async () => {
+      try {
+        if (!open) { p.textContent = await getFull(); p.classList.remove("clamp"); tg.textContent = "Ringkas"; open = true; }
+        else { p.classList.add("clamp"); tg.textContent = "Selengkapnya"; open = false; }
+      } catch { toast("Gagal memuat teks lengkap.", true); }
+    });
+    acts.append(cp, dt, tg); body.appendChild(acts);
+    pending.push(() => { tg.hidden = !m.truncated && p.scrollHeight <= p.clientHeight + 1; });
+  }
+
+  if (m.file) {
+    if (m.file.gone) body.appendChild(goneBox((m.file.reason === "cleanup" ? "Dihapus admin: " : "Sudah diunduh dan dihapus: ") + m.file.name));
+    else attachment(m, body);
+  }
+  return row;
+}
+function emptyState(title, sub) {
+  const e = el("div", "empty"), ic = el("div", "ic"); ic.appendChild(ico("inbox"));
+  e.append(ic, el("b", "", title), sub); return e;
+}
+
+async function load(more) {
+  const r = await fetch("/api/messages" + (more && cursor ? "?cursor=" + encodeURIComponent(cursor) : "")).catch(() => null);
+  if (!r || !r.ok) { $("list").textContent = ""; shown = 0; updateCount(); $("list").appendChild(emptyState("Kiriman belum bisa dimuat", "Pastikan KV sudah dihubungkan ke project ini.")); $("more").hidden = true; return; }
+  const d = await r.json(); cursor = d.cursor;
+  if (!more) { $("list").textContent = ""; shown = 0; }
+  d.items.forEach(m => $("list").appendChild(render(m)));
+  shown += d.items.length; updateCount(); fitClamps();
+  if (!more && !d.items.length) $("list").appendChild(emptyState("Belum ada kiriman", "Upload file atau tulis catatan pertama lewat form."));
+  $("more").hidden = !cursor;
+}
+$("more").addEventListener("click", () => load(true));
+$("refresh").addEventListener("click", () => load(false));
+
+// ---- Upload ----
+$("form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const text = ta.value.trim();
+  if (!text && !picked) { toast("Tulis catatan atau pilih file dulu.", true); return; }
+  try { localStorage.setItem("nama", $("name").value); } catch {}
+  const fd = new FormData();
+  fd.append("name", $("name").value); fd.append("text", text);
+  fd.append("ttl", document.querySelector('input[name="ttl"]:checked').value);
+  if (picked) { fd.append("file", picked); fd.append("oneTime", $("once").checked ? "1" : "0"); }
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "/api/messages");
+  $("send").disabled = true; $("bar").hidden = !picked; $("bar").value = 0;
+  xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) $("bar").value = ev.loaded / ev.total * 100; };
+  xhr.onload = () => {
+    $("send").disabled = false; $("bar").hidden = true;
+    let d = {}; try { d = JSON.parse(xhr.responseText); } catch {}
+    if (xhr.status === 201) {
+      ta.value = ""; ta.style.height = ""; $("file").value = ""; setFile(null); toast("Berhasil diupload.");
+      const em = $("list").querySelector(".empty"); if (em) em.remove();
+      $("list").prepend(render(d.item)); shown++; updateCount(); fitClamps();
+    } else toast(d.error || "Gagal upload. Coba lagi.", true);
+  };
+  xhr.onerror = () => { $("send").disabled = false; $("bar").hidden = true; toast("Koneksi terputus. Coba lagi.", true); };
+  xhr.send(fd);
+});
+
+// ---- Admin ----
+const dlg = $("dlg");
+function showAdmin(on) {
+  $("loginRow").hidden = on; $("tools").hidden = !on;
+  $("adminBtn").classList.toggle("on", on);
+}
+$("adminBtn").addEventListener("click", () => { dlg.showModal(); if (!adminKey) $("key").focus(); });
+$("dclose").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+
+async function login() {
+  const k = $("key").value || adminKey;
+  setMsg("astatus", "");
+  const r = await fetch("/api/cleanup?check=1", { method: "POST", headers: { "x-admin-key": k } });
+  if (!r.ok) { setMsg("astatus", "Kunci admin salah.", true); return; }
+  adminKey = k; try { sessionStorage.setItem("adminKey", k); } catch {}
+  $("key").value = ""; showAdmin(true); load(false);
+}
+$("login").addEventListener("click", login);
+$("key").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); login(); } });
+$("logout").addEventListener("click", () => { adminKey = ""; try { sessionStorage.removeItem("adminKey"); } catch {} showAdmin(false); dlg.close(); load(false); });
+
+$("cleanup").addEventListener("click", async () => {
+  const days = $("cdays").value, all = $("callmsg").checked;
+  if (!confirm(`Hapus ${all ? "pesan dan file" : "file"} yang lebih lama dari ${days} hari? Ini tidak bisa dibatalkan.`)) return;
+  $("cleanup").disabled = true; setMsg("cstatus", "Memproses...");
+  let cur = "", files = 0, msgs = 0;
+  try {
+    for (;;) {
+      const q = new URLSearchParams({ days, scope: all ? "all" : "files" }); if (cur) q.set("cursor", cur);
+      const r = await fetch("/api/cleanup?" + q, { method: "POST", headers: { "x-admin-key": adminKey } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setMsg("cstatus", d.error || "Gagal membersihkan.", true); break; }
+      files += d.filesDeleted; msgs += d.msgsDeleted;
+      setMsg("cstatus", `Memproses... ${files} file dihapus`);
+      if (d.done) { setMsg("cstatus", `Selesai: ${files} file${all ? " dan " + msgs + " pesan" : ""} dihapus.`); load(false); break; }
+      cur = d.cursor;
+    }
+  } catch { setMsg("cstatus", "Koneksi terputus. Jalankan lagi untuk melanjutkan.", true); }
+  $("cleanup").disabled = false;
+});
+
+showAdmin(!!adminKey);
+load(false);
+</script>
+</body>
+</html>
