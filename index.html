@@ -105,6 +105,17 @@ textarea.field{height:auto;min-height:72px;max-height:220px;padding:10px 12px;re
 .chip .info b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip .info span{color:var(--muted);font-size:12.5px}
 
+.chips{display:grid;gap:6px;max-height:252px;overflow:auto}
+.chips[hidden]{display:none}
+.chip.err{border-color:#d9534f}
+.chip .info span.bad{color:#d9534f}
+.chip .st{flex:none;color:var(--muted);font-size:12.5px;font-weight:600;padding-right:4px}
+.chip .st.ok{color:var(--accent)}
+.chipsum{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--muted);margin:0 2px}
+.chipsum[hidden]{display:none}
+.chipsum button{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:2px 4px}
+.upst{font-size:12.5px;color:var(--muted);margin-top:-4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upst[hidden]{display:none}
 .opt{display:grid;gap:8px}
 .switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;cursor:pointer;padding:2px 2px}
 .switch .sl{display:flex;align-items:center;gap:8px;font-weight:500}
@@ -245,16 +256,13 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
 
       <label class="drop" id="drop">
         <span class="ic"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg></span>
-        <b>Pilih atau seret file</b>
-        <span class="sub">Maks. 20 MB, bisa juga paste</span>
-        <input id="file" type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip">
+        <b id="dropT">Pilih atau seret file</b>
+        <span class="sub" id="dropS">Bisa banyak file sekaligus · maks. 20 MB per file · bisa juga paste</span>
+        <input id="file" type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip">
       </label>
 
-      <div class="chip" id="chip" hidden>
-        <div class="thumb" id="thumb"></div>
-        <div class="info"><b id="cname"></b><span id="csize"></span></div>
-        <button class="btn ghost icon" type="button" id="clear" aria-label="Lepas lampiran"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
-      </div>
+      <div class="chipsum" id="chipsum" hidden><span id="sumT"></span><button type="button" id="clearAll">Kosongkan semua</button></div>
+      <div class="chips" id="chips" hidden></div>
 
       <div class="opt">
         <fieldset class="seg">
@@ -274,7 +282,8 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
       </div>
 
       <progress id="bar" max="100" value="0" hidden></progress>
-      <button class="btn primary" id="send" type="submit"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>Upload</button>
+      <div class="upst" id="upst" hidden></div>
+      <button class="btn primary" id="send" type="submit"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg><span id="sendlbl">Upload</span></button>
     </form>
   </section>
 
@@ -328,7 +337,8 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
 const MAX = 20 * 1024 * 1024;
 const $ = (id) => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
-let cursor = null, picked = null, previewURL = null, adminKey = "", tt, shown = 0;
+const MAX_FILES = 30;
+let cursor = null, files = [], busy = false, adminKey = "", tt, shown = 0;
 try { adminKey = sessionStorage.getItem("adminKey") || ""; } catch {}
 try { $("name").value = localStorage.getItem("nama") || ""; } catch {}
 
@@ -395,28 +405,72 @@ applyTheme();
 const ta = $("text");
 ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 220) + "px"; });
 
-function setFile(f) {
-  if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
-  if (f && f.size > MAX) { toast("File terlalu besar. Maksimal 20 MB.", true); $("file").value = ""; f = null; }
-  picked = f || null;
-  $("chip").hidden = !picked; $("drop").hidden = !!picked;
-  $("once").disabled = !picked; $("onceBox").classList.toggle("off", !picked);
-  if (!picked) { $("once").checked = false; return; }
-  $("cname").textContent = picked.name; $("csize").textContent = fmtSize(picked.size);
-  const th = $("thumb"); th.textContent = "";
-  if (/^image\//.test(picked.type) && !/svg/.test(picked.type)) {
-    previewURL = URL.createObjectURL(picked);
-    const im = document.createElement("img"); im.src = previewURL; im.alt = ""; th.appendChild(im);
-  } else th.appendChild(ico(/^video\//.test(picked.type) ? "play" : "file"));
+const fkey = (f) => f.name + "|" + f.size + "|" + f.lastModified;
+function refreshUI() {
+  const n = files.length, ok = files.filter(x => x.state !== "done");
+  $("chips").hidden = !n; $("chipsum").hidden = !n;
+  $("once").disabled = !n; $("onceBox").classList.toggle("off", !n);
+  if (!n) $("once").checked = false;
+  const total = files.reduce((a, x) => a + x.file.size, 0);
+  $("sumT").textContent = n + " file dipilih · " + fmtSize(total);
+  $("dropT").textContent = n ? "Tambah file lagi" : "Pilih atau seret file";
+  $("sendlbl").textContent = busy ? "Mengupload..." : (n ? "Upload " + n + " file" : "Upload");
+  $("clearAll").disabled = busy;
 }
-$("file").addEventListener("change", () => setFile($("file").files[0]));
-$("clear").addEventListener("click", () => { $("file").value = ""; setFile(null); });
+function chipFor(x) {
+  const c = el("div", "chip"); x.node = c;
+  const th = el("div", "thumb");
+  const f = x.file;
+  if (/^image\//.test(f.type) && !/svg/.test(f.type)) {
+    x.url = URL.createObjectURL(f);
+    const im = document.createElement("img"); im.src = x.url; im.alt = ""; th.appendChild(im);
+  } else th.appendChild(ico(/^video\//.test(f.type) ? "play" : "file"));
+  const info = el("div", "info"); info.append(el("b", "", f.name), el("span", "", fmtSize(f.size)));
+  x.sub = info.lastChild;
+  x.st = el("span", "st");
+  const rm = el("button", "btn ghost icon"); rm.type = "button"; rm.setAttribute("aria-label", "Lepas " + f.name); rm.appendChild(ico("x"));
+  rm.addEventListener("click", () => { if (!busy) removeFile(x); });
+  c.append(th, info, x.st, rm);
+  return c;
+}
+function removeFile(x) {
+  if (x.url) URL.revokeObjectURL(x.url);
+  if (x.node) x.node.remove();
+  files = files.filter(y => y !== x);
+  if (!files.length) $("file").value = "";
+  refreshUI();
+}
+function addFiles(list) {
+  if (busy) return;
+  const seen = new Set(files.map(x => fkey(x.file)));
+  let big = 0, dup = 0, over = 0;
+  for (const f of Array.from(list || [])) {
+    if (f.size > MAX) { big++; continue; }
+    if (f.size === 0) continue;
+    if (seen.has(fkey(f))) { dup++; continue; }
+    if (files.length >= MAX_FILES) { over++; continue; }
+    seen.add(fkey(f));
+    const x = { file: f, state: "wait" };
+    files.push(x); $("chips").appendChild(chipFor(x));
+  }
+  const w = [];
+  if (big) w.push(big + " file lebih dari 20 MB dilewati");
+  if (over) w.push(over + " file melebihi batas " + MAX_FILES + " file per upload");
+  if (dup) w.push(dup + " file sama dilewati");
+  if (w.length) toast(w.join(". ") + ".", true);
+  $("file").value = "";
+  refreshUI();
+}
+function clearAll() { if (busy) return; files.slice().forEach(x => { if (x.url) URL.revokeObjectURL(x.url); }); files = []; $("chips").textContent = ""; $("file").value = ""; refreshUI(); }
+$("file").addEventListener("change", () => addFiles($("file").files));
+$("clearAll").addEventListener("click", clearAll);
 
 const box = $("compose");
 ["dragenter", "dragover"].forEach(e => box.addEventListener(e, ev => { ev.preventDefault(); box.classList.add("over"); }));
 ["dragleave", "drop"].forEach(e => box.addEventListener(e, ev => { ev.preventDefault(); box.classList.remove("over"); }));
-box.addEventListener("drop", ev => { const f = ev.dataTransfer.files[0]; if (f) { try { $("file").files = ev.dataTransfer.files; } catch {} setFile(f); } });
-ta.addEventListener("paste", ev => { const f = ev.clipboardData && ev.clipboardData.files[0]; if (f) { ev.preventDefault(); setFile(f); } });
+box.addEventListener("drop", ev => { if (ev.dataTransfer && ev.dataTransfer.files.length) addFiles(ev.dataTransfer.files); });
+ta.addEventListener("paste", ev => { const fl = ev.clipboardData && ev.clipboardData.files; if (fl && fl.length) { ev.preventDefault(); addFiles(fl); } });
+refreshUI();
 
 // ---- Daftar kiriman ----
 const pending = [];
@@ -565,31 +619,80 @@ $("more").addEventListener("click", () => load(true));
 $("refresh").addEventListener("click", () => load(false));
 
 // ---- Upload ----
-$("form").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const text = ta.value.trim();
-  if (!text && !picked) { toast("Tulis catatan atau pilih file dulu.", true); return; }
-  try { localStorage.setItem("nama", $("name").value); } catch {}
+// Setiap file dikirim sebagai satu kiriman sendiri (berurutan). Teks catatan ikut di kiriman pertama yang berhasil.
+function post(fd, onProg) {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/messages");
+    xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) onProg(ev.loaded / ev.total); };
+    xhr.onload = () => { let d = {}; try { d = JSON.parse(xhr.responseText); } catch {} resolve({ ok: xhr.status === 201, d }); };
+    xhr.onerror = () => resolve({ ok: false, d: { error: "Koneksi terputus." } });
+    xhr.send(fd);
+  });
+}
+function addToFeed(item) {
+  const em = $("list").querySelector(".empty"); if (em) em.remove();
+  $("list").prepend(render(item)); shown++; updateCount(); fitClamps();
+}
+function mkFd(text, extra) {
   const fd = new FormData();
   fd.append("name", $("name").value); fd.append("text", text);
   fd.append("ttl", document.querySelector('input[name="ttl"]:checked').value);
-  if (picked) { fd.append("file", picked); fd.append("oneTime", $("once").checked ? "1" : "0"); }
+  if (extra) { fd.append("file", extra); fd.append("oneTime", $("once").checked ? "1" : "0"); }
+  return fd;
+}
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (busy) return;
+  let text = ta.value.trim();
+  if (!text && !files.length) { toast("Tulis catatan atau pilih file dulu.", true); return; }
+  try { localStorage.setItem("nama", $("name").value); } catch {}
 
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", "/api/messages");
-  $("send").disabled = true; $("bar").hidden = !picked; $("bar").value = 0;
-  xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) $("bar").value = ev.loaded / ev.total * 100; };
-  xhr.onload = () => {
-    $("send").disabled = false; $("bar").hidden = true;
-    let d = {}; try { d = JSON.parse(xhr.responseText); } catch {}
-    if (xhr.status === 201) {
-      ta.value = ""; ta.style.height = ""; $("file").value = ""; setFile(null); toast("Berhasil diupload.");
-      const em = $("list").querySelector(".empty"); if (em) em.remove();
-      $("list").prepend(render(d.item)); shown++; updateCount(); fitClamps();
-    } else toast(d.error || "Gagal upload. Coba lagi.", true);
-  };
-  xhr.onerror = () => { $("send").disabled = false; $("bar").hidden = true; toast("Koneksi terputus. Coba lagi.", true); };
-  xhr.send(fd);
+  busy = true; $("send").disabled = true; refreshUI();
+
+  // hanya teks
+  if (!files.length) {
+    const r = await post(mkFd(text, null), () => {});
+    busy = false; $("send").disabled = false; refreshUI();
+    if (r.ok) { ta.value = ""; ta.style.height = ""; toast("Berhasil diupload."); addToFeed(r.d.item); }
+    else toast(r.d.error || "Gagal upload. Coba lagi.", true);
+    return;
+  }
+
+  const queue = files.filter(x => x.state !== "done");
+  const totalBytes = queue.reduce((a, x) => a + x.file.size, 0) || 1;
+  let doneBytes = 0, okN = 0, failN = 0;
+  $("bar").hidden = false; $("bar").value = 0; $("upst").hidden = false;
+  queue.forEach(x => { x.state = "wait"; x.st.className = "st"; x.st.textContent = "Menunggu"; x.node.classList.remove("err"); });
+
+  for (let i = 0; i < queue.length; i++) {
+    const x = queue[i];
+    $("upst").textContent = `Mengupload ${i + 1} dari ${queue.length}: ${x.file.name}`;
+    x.st.textContent = "0%";
+    const r = await post(mkFd(text, x.file), (frac) => {
+      x.st.textContent = Math.round(frac * 100) + "%";
+      $("bar").value = (doneBytes + frac * x.file.size) / totalBytes * 100;
+    });
+    doneBytes += x.file.size;
+    $("bar").value = doneBytes / totalBytes * 100;
+    if (r.ok) {
+      okN++; x.state = "done"; x.st.className = "st ok"; x.st.textContent = "Selesai";
+      if (text) { text = ""; ta.value = ""; ta.style.height = ""; }
+      addToFeed(r.d.item);
+    } else {
+      failN++; x.state = "fail"; x.node.classList.add("err");
+      x.st.textContent = "Gagal"; x.sub.className = "bad"; x.sub.textContent = r.d.error || "Gagal upload.";
+    }
+  }
+
+  busy = false; $("send").disabled = false; $("bar").hidden = true; $("upst").hidden = true;
+  // buang yang sukses (tampilkan sebentar), sisakan yang gagal untuk dicoba lagi
+  const okFiles = files.filter(x => x.state === "done");
+  setTimeout(() => okFiles.forEach(x => { if (!busy) removeFile(x); }), 1200);
+  files.filter(x => x.state === "fail").forEach(x => { x.state = "wait"; });
+  refreshUI();
+  if (failN) toast(`${okN} file berhasil, ${failN} gagal. Yang gagal masih ada di daftar, tekan Upload untuk mencoba lagi.`, true);
+  else toast(okN > 1 ? `${okN} file berhasil diupload.` : "Berhasil diupload.");
 });
 
 // ---- Admin ----
