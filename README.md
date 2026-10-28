@@ -16,6 +16,11 @@ Struktur (folder proyek: upload-aja):
 5. Settings > Variables and Secrets > tambah secret ADMIN_KEY (password admin).
 6. Redeploy.
 
+## Upload banyak file
+- Pilih beberapa file sekaligus (Ctrl/Shift/Cmd di dialog), seret banyak file, atau paste banyak file. Maks. 30 file per upload, 20 MB per file.
+- Tiap file dikirim berurutan sebagai satu kiriman sendiri (ada progres per file dan total). Catatan teks ikut di kiriman pertama.
+- File yang gagal tetap ada di daftar, tinggal tekan Upload lagi. Backend tidak berubah.
+
 ## Fitur hemat storage
 - Simpan selama: 1 / 7 / 30 hari / tanpa batas (dihapus otomatis oleh KV).
 - Sekali unduh: file dihapus dari KV setelah diunduh.
