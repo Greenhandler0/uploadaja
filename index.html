@@ -132,7 +132,7 @@ textarea.field{height:auto;min-height:72px;max-height:220px;padding:10px 12px;re
 .seg .opts{display:grid;grid-template-columns:repeat(4,1fr);background:var(--soft);border-radius:10px;padding:2px;gap:2px}
 .seg label{position:relative;display:block}
 .seg input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.seg span{display:block;text-align:center;padding:5px 2px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.seg span{display:flex;align-items:center;justify-content:center;gap:4px;text-align:center;padding:5px 2px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--muted)}
 .seg input:checked+span{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px var(--shadow)}
 .seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:1px}
 progress{width:100%;height:6px;border:0;border-radius:6px;overflow:hidden;accent-color:var(--accent)}
@@ -151,7 +151,7 @@ progress{width:100%;height:6px;border:0;border-radius:6px;overflow:hidden;accent
 .name{font-weight:700;font-size:14px}
 .when{color:var(--muted);font-size:12.5px}
 .sp{flex:1}
-@media(max-width:520px){.sp{display:none}.head .icon{margin-left:auto}}
+@media(max-width:520px){.sp{display:none}.head .adm{margin-left:auto}}
 .life{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
 .meter{display:block;width:34px;height:4px;border-radius:4px;background:var(--soft);overflow:hidden}
 .meter b{display:block;height:100%;background:var(--accent);border-radius:4px}
@@ -185,7 +185,7 @@ progress{width:100%;height:6px;border:0;border-radius:6px;overflow:hidden;accent
 #more{margin:10px auto 0;display:flex}
 
 /* ---------- Dialog ---------- */
-dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--panel);color:var(--ink);width:min(400px,calc(100vw - 32px))}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--panel);color:var(--ink);width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
 dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .dh{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 8px 14px;border-bottom:1px solid var(--line);font-weight:800}
 .db{padding:14px;display:grid;gap:12px}
@@ -208,6 +208,44 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
 .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--soft);border-radius:12px;padding:3px}
 .modes button{display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:transparent;border-radius:8px;padding:6px 4px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
 .modes button[aria-pressed="true"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px var(--shadow)}
+
+/* ---------- Terkunci, banyak file, admin ---------- */
+.seg label.lk input:disabled{cursor:not-allowed}
+.seg label.lk input:disabled+span{opacity:.55}
+.seg input:not(:disabled)+span .lkic{display:none}
+.hint{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:-2px}
+.att.multi{max-width:460px}
+.msum{display:flex;align-items:center;gap:6px;padding:7px 8px 7px 10px;font-size:13px;background:var(--soft);border-bottom:1px solid var(--line)}
+.msum span{color:var(--muted)}
+.msum b,.msum span{white-space:nowrap}
+.msum .btn{height:28px;font-size:12.5px;padding:0 10px}
+.grid{display:grid;gap:2px;background:var(--soft)}
+.tile{position:relative;display:block;aspect-ratio:1;overflow:hidden;background:var(--soft)}
+.grid.n1 .tile{aspect-ratio:16/10}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile .more{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.5);color:#fff;font-weight:800;font-size:20px}
+.grid+.flist{border-top:1px solid var(--line)}
+.flist>*+*{border-top:1px solid var(--line)}
+.flist .gone{margin:0;border:0;border-radius:0}
+.badge.th{display:block;padding:0;overflow:hidden}
+.badge.th img{width:100%;height:100%;object-fit:cover;display:block}
+.moreFiles{display:block;width:100%;border:0;border-top:1px solid var(--line);background:transparent;color:var(--accent);font-weight:600;padding:8px;cursor:pointer}
+.moreFiles:hover{background:var(--soft)}
+.adm{display:flex;align-items:center;gap:2px}
+.sel{width:16px;height:16px;margin:0 6px 0 2px;accent-color:var(--accent);cursor:pointer}
+.ftools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 8px}
+.ftools select.field{width:auto;padding:0 10px}
+.bulk{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:7px 10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;flex-wrap:wrap}
+.bulk .chk{align-items:center}
+.bulk .chk input{margin:0}
+.bulk .btn{height:30px}
+.sec{display:grid;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+.sec:first-child{border-top:0;padding-top:0}
+.sec h3{margin:0;font-size:13px;font-weight:800;letter-spacing:-.01em}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat{background:var(--soft);border-radius:10px;padding:8px 10px}
+.stat b{display:block;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.stat span{font-size:12px;color:var(--muted)}
 
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .15s;max-width:calc(100vw - 32px);z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 #toast.show{opacity:1}
@@ -257,7 +295,7 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
       <label class="drop" id="drop">
         <span class="ic"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg></span>
         <b id="dropT">Pilih atau seret file</b>
-        <span class="sub" id="dropS">Maks. 20 MB per file</span>
+        <span class="sub" id="dropS">Banyak file sekaligus jadi 1 kiriman · maks. 20 MB per file · bisa paste</span>
         <input id="file" type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip">
       </label>
 
@@ -270,10 +308,11 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
           <div class="opts">
             <label><input type="radio" name="ttl" value="1"><span>1 hari</span></label>
             <label><input type="radio" name="ttl" value="7" checked><span>7 hari</span></label>
-            <label><input type="radio" name="ttl" value="30"><span>30 hari</span></label>
-            <label><input type="radio" name="ttl" value="0"><span>Selamanya</span></label>
+            <label class="lk"><input type="radio" name="ttl" value="30" disabled><span><svg class="i sm lkic" aria-hidden="true"><use href="#i-lock"/></svg>30 hari</span></label>
+            <label class="lk"><input type="radio" name="ttl" value="0" disabled><span><svg class="i sm lkic" aria-hidden="true"><use href="#i-lock"/></svg>Selamanya</span></label>
           </div>
         </fieldset>
+        <div class="hint" id="lockHint"><svg class="i sm" aria-hidden="true"><use href="#i-lock"/></svg>30 hari dan Selamanya terkunci, khusus admin.</div>
         <label class="switch off" id="onceBox">
           <span class="sl"><svg class="i sm" aria-hidden="true"><use href="#i-lock"/></svg>Hapus setelah diunduh sekali</span>
           <input type="checkbox" id="once" disabled>
@@ -291,6 +330,18 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
     <div class="feedhead">
       <h2>Kiriman terbaru<small id="count"></small></h2>
       <button class="btn ghost icon" id="refresh" type="button" aria-label="Muat ulang"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+    </div>
+    <div class="ftools">
+      <input class="field" id="fq" type="search" placeholder="Cari nama, catatan, atau nama file" aria-label="Cari kiriman">
+      <select class="field" id="ff" aria-label="Filter kiriman">
+        <option value="all">Semua</option><option value="files">Ada file</option><option value="text">Hanya teks</option><option value="once">Sekali unduh</option><option value="forever">Tanpa batas</option>
+      </select>
+    </div>
+    <div class="bulk" id="bulk" hidden>
+      <label class="chk"><input type="checkbox" id="selAll"><span>Pilih semua yang tampil</span></label>
+      <span class="sp"></span>
+      <span class="when" id="selN"></span>
+      <button class="btn danger" id="bulkDel" type="button" disabled><svg class="i sm" aria-hidden="true"><use href="#i-trash"/></svg>Hapus terpilih</button>
     </div>
     <div class="list" id="list"></div>
     <button class="btn ghost" id="more" type="button" hidden>Muat lebih banyak</button>
@@ -319,16 +370,43 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
       <button class="btn primary" style="width:auto;height:40px;box-shadow:none" id="login" type="button">Masuk</button>
     </div>
     <div id="tools" hidden>
-      <div>
-        <label class="l" for="cdays">Hapus file yang lebih lama dari</label>
-        <select class="field" id="cdays"><option value="7">7 hari</option><option value="30" selected>30 hari</option><option value="90">90 hari</option></select>
-      </div>
-      <label class="chk"><input type="checkbox" id="callmsg"><span>Hapus juga teks pesannya<small>Jika tidak dicentang, teks tetap ada dan hanya file yang dihapus.</small></span></label>
-      <button class="btn danger" id="cleanup" type="button"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>Hapus file lama</button>
-      <div class="msg" id="cstatus" role="status" aria-live="polite"></div>
+      <section class="sec">
+        <h3>Statistik</h3>
+        <div class="stats" id="stats" hidden></div>
+        <button class="btn" id="statBtn" type="button">Hitung statistik</button>
+        <div class="msg" id="sstatus" role="status" aria-live="polite"></div>
+      </section>
+      <section class="sec">
+        <h3>Hapus file lama</h3>
+        <div>
+          <label class="l" for="cdays">Hapus file yang lebih lama dari</label>
+          <select class="field" id="cdays"><option value="7">7 hari</option><option value="30" selected>30 hari</option><option value="90">90 hari</option></select>
+        </div>
+        <label class="chk"><input type="checkbox" id="callmsg"><span>Hapus juga teks pesannya<small>Jika tidak dicentang, teks tetap ada dan hanya file yang dihapus.</small></span></label>
+        <button class="btn danger" id="cleanup" type="button"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>Hapus file lama</button>
+        <div class="msg" id="cstatus" role="status" aria-live="polite"></div>
+      </section>
+      <section class="sec">
+        <h3>Perawatan</h3>
+        <button class="btn" id="orph" type="button"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg>Pindai file yatim</button>
+        <button class="btn danger" id="wipe" type="button"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>Hapus semua kiriman</button>
+        <div class="msg" id="ostatus" role="status" aria-live="polite"></div>
+      </section>
       <button class="btn ghost" id="logout" type="button">Keluar dari admin</button>
     </div>
     <div class="msg" id="astatus" role="status" aria-live="polite"></div>
+  </div>
+</dialog>
+<dialog id="edlg" aria-labelledby="edtitle">
+  <div class="dh"><span id="edtitle">Ubah masa simpan</span><button class="btn ghost icon" type="button" id="edclose" aria-label="Tutup"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <div class="msg" id="edinfo"></div>
+    <div>
+      <label class="l" for="edays">Simpan lagi selama (dihitung dari sekarang)</label>
+      <select class="field" id="edays"><option value="1">1 hari</option><option value="7">7 hari</option><option value="30" selected>30 hari</option><option value="90">90 hari</option><option value="365">365 hari</option><option value="0">Selamanya</option></select>
+    </div>
+    <button class="btn primary" id="edsave" type="button">Simpan</button>
+    <div class="msg" id="edstatus" role="status" aria-live="polite"></div>
   </div>
 </dialog>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -338,7 +416,8 @@ const MAX = 20 * 1024 * 1024;
 const $ = (id) => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
 const MAX_FILES = 30;
-let cursor = null, files = [], busy = false, adminKey = "", tt, shown = 0;
+let cursor = null, files = [], busy = false, adminKey = "", tt, shown = 0, cur = null;
+const selected = new Set();
 try { adminKey = sessionStorage.getItem("adminKey") || ""; } catch {}
 try { $("name").value = localStorage.getItem("nama") || ""; } catch {}
 
@@ -361,6 +440,7 @@ function left(ms) {
   return "sebentar lagi";
 }
 function toast(msg, err) { const t = $("toast"); t.textContent = msg; t.className = "show" + (err ? " err" : ""); clearTimeout(tt); tt = setTimeout(() => t.className = "", 3500); }
+function setBtn(b, icon, text) { b.textContent = ""; b.append(ico(icon, true), text); }
 function setMsg(id, msg, err) { const s = $(id); s.textContent = msg || ""; s.className = "msg" + (err ? " err" : ""); }
 function saveBlob(blob, name) {
   const u = URL.createObjectURL(blob), a = document.createElement("a");
@@ -437,7 +517,7 @@ function removeFile(x) {
   if (x.url) URL.revokeObjectURL(x.url);
   if (x.node) x.node.remove();
   files = files.filter(y => y !== x);
-  if (!files.length) $("file").value = "";
+  if (!files.length) { $("file").value = ""; cur = null; }
   refreshUI();
 }
 function addFiles(list) {
@@ -461,7 +541,7 @@ function addFiles(list) {
   $("file").value = "";
   refreshUI();
 }
-function clearAll() { if (busy) return; files.slice().forEach(x => { if (x.url) URL.revokeObjectURL(x.url); }); files = []; $("chips").textContent = ""; $("file").value = ""; refreshUI(); }
+function clearAll() { if (busy) return; files.slice().forEach(x => { if (x.url) URL.revokeObjectURL(x.url); }); files = []; cur = null; $("chips").textContent = ""; $("file").value = ""; refreshUI(); }
 $("file").addEventListener("change", () => addFiles($("file").files));
 $("clearAll").addEventListener("click", clearAll);
 
@@ -475,7 +555,7 @@ refreshUI();
 // ---- Daftar kiriman ----
 const pending = [];
 function fitClamps() { requestAnimationFrame(() => { while (pending.length) pending.shift()(); }); }
-function updateCount() { $("count").textContent = shown ? shown + " item" : ""; }
+function updateCount() { applyFilter(); }
 async function copyText(t) {
   try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(t); return; } } catch {}
   const a = document.createElement("textarea"); a.value = t; a.style.cssText = "position:fixed;opacity:0;top:0;left:0";
@@ -503,57 +583,177 @@ function life(m) {
 }
 function goneBox(text) { const g = el("div", "gone"); g.appendChild(ico("trash", true)); g.append(text); return g; }
 
-function attachment(m, body) {
-  const f = m.file, t = f.type;
-  const att = el("div", "att");
-  const viewable = !m.oneTime && (/^(image\/(?!svg)|video\/|audio\/)/.test(t) || t === "application/pdf");
+const INL = /^(image\/(?!svg)|video\/|audio\/)|^application\/pdf$/;
+const isImg = (t) => /^image\//.test(t) && !/svg/.test(t);
+const goneText = (f) => (f.reason === "cleanup" || f.reason === "admin" ? "Dihapus admin: " : "Sudah diunduh dan dihapus: ") + f.name;
 
-  if (!m.oneTime) {
-    if (/^image\//.test(t) && !/svg/.test(t)) {
-      const pv = el("div", "pv"), a = el("a"); a.href = f.url; a.target = "_blank"; a.rel = "noopener";
-      const i = document.createElement("img"); i.src = f.url; i.loading = "lazy"; i.alt = f.name; a.appendChild(i); pv.appendChild(a); att.appendChild(pv);
-    } else if (/^video\//.test(t)) {
-      const pv = el("div", "pv"), v = document.createElement("video"); v.src = f.url; v.controls = true; v.preload = "metadata"; v.playsInline = true; pv.appendChild(v); att.appendChild(pv);
-    } else if (/^audio\//.test(t)) {
-      const pv = el("div", "pv"), a = document.createElement("audio"); a.src = f.url; a.controls = true; pv.appendChild(a); att.appendChild(pv);
-    }
-  }
-
+function fileBar(m, f, row, att, single) {
   const bar = el("div", "fbar");
   const sub = fmtSize(f.size) + (m.oneTime ? " · hanya bisa diunduh sekali" : "");
   const info = el("span", "t"); info.append(el("b", "", f.name), el("span", "", sub));
-  bar.append(el("span", "badge", extOf(f.name)), info);
+  let lead;
+  if (!single && !m.oneTime && isImg(f.type)) {
+    lead = el("a", "badge th"); lead.href = f.url; lead.target = "_blank"; lead.rel = "noopener"; lead.setAttribute("aria-label", "Buka " + f.name);
+    const im = document.createElement("img"); im.src = f.url; im.loading = "lazy"; im.alt = ""; lead.appendChild(im);
+  } else lead = el("span", "badge", extOf(f.name));
+  bar.append(lead, info);
 
-  if (viewable) {
+  if (!m.oneTime && INL.test(f.type)) {
     const op = el("a", "btn ghost icon"); op.href = f.url; op.target = "_blank"; op.rel = "noopener"; op.title = "Buka di tab baru"; op.setAttribute("aria-label", "Buka " + f.name);
     op.appendChild(ico("open", true)); bar.appendChild(op);
   }
+  if (adminKey) {
+    const x = el("button", "btn ghost icon"); x.type = "button"; x.title = "Hapus file ini saja"; x.setAttribute("aria-label", "Hapus file " + f.name);
+    x.appendChild(ico("trash", true)); x.addEventListener("click", () => delFile(m, f, row)); bar.appendChild(x);
+  }
   const dl = el("a", "btn dl"); dl.href = m.oneTime ? f.url + "?dl=1" : f.url; dl.setAttribute("download", f.name);
   dl.setAttribute("aria-label", "Download " + f.name); dl.append(ico("down", true), "Download");
-  if (m.oneTime) dl.addEventListener("click", () => setTimeout(() => att.replaceWith(goneBox("Sudah diunduh dan dihapus: " + f.name)), 2000));
+  if (m.oneTime) dl.addEventListener("click", () => setTimeout(() => (single ? att : bar).replaceWith(goneBox("Sudah diunduh dan dihapus: " + f.name)), 2000));
   bar.appendChild(dl);
-  att.appendChild(bar);
+  return bar;
+}
+
+async function delFile(m, f, row) {
+  if (!confirm('Hapus file "' + f.name + '" dari kiriman ini? Teks dan file lain tetap ada.')) return;
+  const r = await adminApi("delfile", { key: m.key, fid: f.id });
+  if (r.ok) { putRow(r.d.item, row); toast("File dihapus."); } else toast(r.d.error || "Gagal menghapus file.", true);
+}
+
+// ---- ZIP sederhana (tanpa kompresi) untuk "Unduh semua" ----
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(entries) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  const d = new Date(), dt = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate(), tm = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  let offset = 0;
+  for (const e of entries) {
+    const nm = enc.encode(e.name), crc = crc32(e.data), sz = e.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(10, tm, true); lh.setUint16(12, dt, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, sz, true); lh.setUint32(22, sz, true); lh.setUint16(26, nm.length, true);
+    parts.push(lh.buffer, nm, e.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(12, tm, true); ch.setUint16(14, dt, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, sz, true); ch.setUint32(24, sz, true); ch.setUint16(28, nm.length, true); ch.setUint32(42, offset, true);
+    central.push(ch.buffer, nm);
+    offset += 30 + nm.length + sz;
+  }
+  let csize = 0; central.forEach(b => csize += b.byteLength);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true); end.setUint32(12, csize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end.buffer], { type: "application/zip" });
+}
+async function zipAll(m, btn) {
+  const live = m.files.filter(f => !f.gone), total = live.reduce((a, f) => a + f.size, 0);
+  if (total > 250 * 1048576) { toast("Total lebih dari 250 MB. Unduh per file saja.", true); return; }
+  btn.disabled = true;
+  const names = new Set(), entries = [];
+  try {
+    for (let i = 0; i < live.length; i++) {
+      setBtn(btn, "down", "Menyiapkan " + (i + 1) + "/" + live.length);
+      const r = await fetch(live[i].url); if (!r.ok) throw new Error("fetch");
+      const data = new Uint8Array(await r.arrayBuffer());
+      const base = live[i].name.replace(/[\\/:*?"<>|]/g, "_"); let n = base, k = 2;
+      while (names.has(n.toLowerCase())) { const dot = base.lastIndexOf("."); n = dot > 0 ? base.slice(0, dot) + " (" + k + ")" + base.slice(dot) : base + " (" + k + ")"; k++; }
+      names.add(n.toLowerCase()); entries.push({ name: n, data });
+    }
+    saveBlob(makeZip(entries), "upload-aja-" + new Date(m.createdAt).toISOString().slice(0, 10) + ".zip");
+  } catch { toast("Gagal menyiapkan ZIP. Coba unduh per file.", true); }
+  setBtn(btn, "down", "Unduh semua (.zip)"); btn.disabled = false;
+}
+
+function attachments(m, body, row) {
+  const fs = m.files, live = fs.filter(f => !f.gone);
+  if (fs.length === 1) {
+    const f = fs[0];
+    if (f.gone) { body.appendChild(goneBox(goneText(f))); return; }
+    const att = el("div", "att"), t = f.type;
+    if (!m.oneTime) {
+      if (isImg(t)) {
+        const pv = el("div", "pv"), a = el("a"); a.href = f.url; a.target = "_blank"; a.rel = "noopener";
+        const i = document.createElement("img"); i.src = f.url; i.loading = "lazy"; i.alt = f.name; a.appendChild(i); pv.appendChild(a); att.appendChild(pv);
+      } else if (/^video\//.test(t)) {
+        const pv = el("div", "pv"), v = document.createElement("video"); v.src = f.url; v.controls = true; v.preload = "metadata"; v.playsInline = true; pv.appendChild(v); att.appendChild(pv);
+      } else if (/^audio\//.test(t)) {
+        const pv = el("div", "pv"), a = document.createElement("audio"); a.src = f.url; a.controls = true; pv.appendChild(a); att.appendChild(pv);
+      }
+    }
+    att.appendChild(fileBar(m, f, row, att, true));
+    body.appendChild(att); return;
+  }
+
+  // Banyak file dalam SATU kiriman
+  const att = el("div", "att multi");
+  const sum = el("div", "msum");
+  sum.append(ico("file", true), el("b", "", fs.length + " file"), el("span", "", "· " + fmtSize(live.reduce((a, f) => a + f.size, 0))), el("span", "sp"));
+  if (live.length > 1 && !m.oneTime) {
+    const z = el("button", "btn"); z.type = "button"; setBtn(z, "down", "Unduh semua (.zip)");
+    z.addEventListener("click", () => zipAll(m, z)); sum.appendChild(z);
+  }
+  att.appendChild(sum);
+
+  const imgs = m.oneTime ? [] : live.filter(f => isImg(f.type));
+  if (imgs.length) {
+    const g = el("div", "grid" + (imgs.length === 1 ? " n1" : ""));
+    g.style.gridTemplateColumns = "repeat(" + Math.min(3, imgs.length) + ",1fr)";
+    imgs.slice(0, 6).forEach((f, i) => {
+      const a = el("a", "tile"); a.href = f.url; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Buka " + f.name);
+      const im = document.createElement("img"); im.src = f.url; im.loading = "lazy"; im.alt = f.name; a.appendChild(im);
+      if (i === 5 && imgs.length > 6) a.appendChild(el("span", "more", "+" + (imgs.length - 6)));
+      g.appendChild(a);
+    });
+    att.appendChild(g);
+  }
+
+  const LIM = 5, list = el("div", "flist");
+  fs.forEach((f, i) => { const n = f.gone ? goneBox(goneText(f)) : fileBar(m, f, row, att, false); if (i >= LIM) n.hidden = true; list.appendChild(n); });
+  att.appendChild(list);
+  if (fs.length > LIM) {
+    const mb = el("button", "moreFiles", "Tampilkan " + (fs.length - LIM) + " file lagi"); mb.type = "button"; let open = false;
+    mb.addEventListener("click", () => {
+      open = !open;
+      Array.from(list.children).forEach((n, i) => { if (i >= LIM) n.hidden = !open; });
+      mb.textContent = open ? "Ringkas daftar file" : "Tampilkan " + (fs.length - LIM) + " file lagi";
+    });
+    att.appendChild(mb);
+  }
   body.appendChild(att);
 }
 
+function putRow(item, old) {
+  const nr = render(item);
+  if (old && old.isConnected) old.replaceWith(nr);
+  else { const em = $("list").querySelector(".empty"); if (em) em.remove(); $("list").prepend(nr); shown++; }
+  fitClamps(); applyFilter(); return nr;
+}
+
+async function delOne(row) {
+  const m = row._m;
+  if (!confirm("Hapus kiriman ini beserta semua filenya?")) return;
+  const r = await fetch("/api/messages?key=" + encodeURIComponent(m.key), { method: "DELETE", headers: { "x-admin-key": adminKey } }).catch(() => null);
+  if (r && r.ok) { selected.delete(m.key); row.remove(); shown = Math.max(0, shown - 1); applyFilter(); toast("Kiriman dihapus."); }
+  else toast((r && (await r.json().catch(() => ({}))).error) || "Gagal menghapus.", true);
+}
+
 function render(m) {
-  const row = el("article", "row");
+  const row = el("article", "row"); row._m = m;
   row.appendChild(avatar(m.name));
   const body = el("div"); body.style.minWidth = "0"; row.appendChild(body);
 
   const head = el("div", "head");
   const when = el("span", "when", ago(m.createdAt)); when.title = fmtDate(m.createdAt);
   head.append(el("span", "name", m.name), when, el("span", "sp"));
-  if (m.oneTime && m.file && !m.file.gone) { const tg = el("span", "tag"); tg.appendChild(ico("lock", true)); tg.append("Sekali unduh"); head.appendChild(tg); }
+  if (m.oneTime && m.files.some(f => !f.gone)) { const tg = el("span", "tag"); tg.appendChild(ico("lock", true)); tg.append("Sekali unduh"); head.appendChild(tg); }
   head.appendChild(life(m));
   if (adminKey) {
-    const del = el("button", "btn ghost icon"); del.type = "button"; del.setAttribute("aria-label", "Hapus kiriman ini"); del.appendChild(ico("trash", true));
-    del.addEventListener("click", async () => {
-      if (!confirm("Hapus kiriman ini beserta filenya?")) return;
-      const r = await fetch("/api/messages?key=" + encodeURIComponent(m.key), { method: "DELETE", headers: { "x-admin-key": adminKey } });
-      if (r.ok) { row.remove(); shown = Math.max(0, shown - 1); updateCount(); toast("Kiriman dihapus."); } else toast((await r.json().catch(() => ({}))).error || "Gagal menghapus.", true);
-    });
-    head.appendChild(del);
+    const adm = el("span", "adm");
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "sel"; cb.setAttribute("aria-label", "Pilih kiriman ini"); cb.checked = selected.has(m.key);
+    cb.addEventListener("change", () => { cb.checked ? selected.add(m.key) : selected.delete(m.key); updateBulk(); });
+    const ed = el("button", "btn ghost icon"); ed.type = "button"; ed.title = "Ubah masa simpan"; ed.setAttribute("aria-label", "Ubah masa simpan"); ed.appendChild(ico("clock", true));
+    ed.addEventListener("click", () => openEdit(row));
+    const del = el("button", "btn ghost icon"); del.type = "button"; del.title = "Hapus kiriman"; del.setAttribute("aria-label", "Hapus kiriman ini"); del.appendChild(ico("trash", true));
+    del.addEventListener("click", () => delOne(row));
+    adm.append(cb, ed, del); head.appendChild(adm);
   }
   body.appendChild(head);
 
@@ -567,15 +767,14 @@ function render(m) {
       full = (await r.json()).text; return full;
     };
     const acts = el("div", "acts");
-    const label = (b, icon, text) => { b.textContent = ""; b.append(ico(icon, true), text); };
-    const cp = el("button", "act"); cp.type = "button"; label(cp, "copy", "Salin");
-    const dt = el("button", "act"); dt.type = "button"; label(dt, "down", "Unduh");
+    const cp = el("button", "act"); cp.type = "button"; setBtn(cp, "copy", "Salin");
+    const dt = el("button", "act"); dt.type = "button"; setBtn(dt, "down", "Unduh");
     const tg = el("button", "act", "Selengkapnya"); tg.type = "button"; tg.hidden = !m.truncated;
     cp.addEventListener("click", async () => {
       try {
         await copyText(await getFull());
-        cp.classList.add("ok"); label(cp, "check", "Tersalin");
-        setTimeout(() => { cp.classList.remove("ok"); label(cp, "copy", "Salin"); }, 1800);
+        cp.classList.add("ok"); setBtn(cp, "check", "Tersalin");
+        setTimeout(() => { cp.classList.remove("ok"); setBtn(cp, "copy", "Salin"); }, 1800);
       } catch { toast("Gagal menyalin teks.", true); }
     });
     dt.addEventListener("click", async () => {
@@ -594,12 +793,33 @@ function render(m) {
     pending.push(() => { tg.hidden = !m.truncated && p.scrollHeight <= p.clientHeight + 1; });
   }
 
-  if (m.file) {
-    if (m.file.gone) body.appendChild(goneBox((m.file.reason === "cleanup" ? "Dihapus admin: " : "Sudah diunduh dan dihapus: ") + m.file.name));
-    else attachment(m, body);
-  }
+  if (m.files.length) attachments(m, body, row);
   return row;
 }
+
+// ---- Cari & filter (di kiriman yang sudah dimuat) ----
+function rowMatch(m) {
+  const q = $("fq").value.trim().toLowerCase(), f = $("ff").value, fs = m.files || [];
+  if (f === "files" && !fs.length) return false;
+  if (f === "text" && fs.length) return false;
+  if (f === "once" && !(m.oneTime && fs.some(x => !x.gone))) return false;
+  if (f === "forever" && m.expiresAt) return false;
+  if (q && !(m.name + " " + (m.text || "") + " " + fs.map(x => x.name).join(" ")).toLowerCase().includes(q)) return false;
+  return true;
+}
+function applyFilter() {
+  const rows = Array.from($("list").querySelectorAll(".row")), nm = $("list").querySelector(".nomatch");
+  if (nm) nm.remove();
+  let n = 0;
+  rows.forEach(r => { const ok = rowMatch(r._m); r.hidden = !ok; if (ok) n++; });
+  const filtering = $("fq").value.trim() || $("ff").value !== "all";
+  if (rows.length && !n) { const e = emptyState("Tidak ada yang cocok", "Ubah kata kunci atau filter. Pencarian hanya mencakup kiriman yang sudah dimuat."); e.classList.add("nomatch"); $("list").appendChild(e); }
+  $("count").textContent = shown ? (filtering ? n + " dari " + shown : shown) + " item" : "";
+  updateBulk();
+}
+$("fq").addEventListener("input", applyFilter);
+$("ff").addEventListener("change", applyFilter);
+
 function emptyState(title, sub) {
   const e = el("div", "empty"), ic = el("div", "ic"); ic.appendChild(ico("inbox"));
   e.append(ic, el("b", "", title), sub); return e;
@@ -609,7 +829,7 @@ async function load(more) {
   const r = await fetch("/api/messages" + (more && cursor ? "?cursor=" + encodeURIComponent(cursor) : "")).catch(() => null);
   if (!r || !r.ok) { $("list").textContent = ""; shown = 0; updateCount(); $("list").appendChild(emptyState("Kiriman belum bisa dimuat", "Pastikan KV sudah dihubungkan ke project ini.")); $("more").hidden = true; return; }
   const d = await r.json(); cursor = d.cursor;
-  if (!more) { $("list").textContent = ""; shown = 0; }
+  if (!more) { $("list").textContent = ""; shown = 0; selected.clear(); }
   d.items.forEach(m => $("list").appendChild(render(m)));
   shown += d.items.length; updateCount(); fitClamps();
   if (!more && !d.items.length) $("list").appendChild(emptyState("Belum ada kiriman", "Upload file atau tulis catatan pertama lewat form."));
@@ -619,20 +839,18 @@ $("more").addEventListener("click", () => load(true));
 $("refresh").addEventListener("click", () => load(false));
 
 // ---- Upload ----
-// Setiap file dikirim sebagai satu kiriman sendiri (berurutan). Teks catatan ikut di kiriman pertama yang berhasil.
-function post(fd, onProg) {
+// Semua file dalam satu kali upload masuk ke SATU kiriman (satu status):
+// file pertama membuat kiriman, file berikutnya ditambahkan ke kiriman yang sama.
+function post(fd, onProg, url) {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/messages");
+    xhr.open("POST", url || "/api/messages");
+    if (adminKey) xhr.setRequestHeader("x-admin-key", adminKey);
     xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) onProg(ev.loaded / ev.total); };
-    xhr.onload = () => { let d = {}; try { d = JSON.parse(xhr.responseText); } catch {} resolve({ ok: xhr.status === 201, d }); };
-    xhr.onerror = () => resolve({ ok: false, d: { error: "Koneksi terputus." } });
+    xhr.onload = () => { let d = {}; try { d = JSON.parse(xhr.responseText); } catch {} resolve({ ok: xhr.status === 201, status: xhr.status, d }); };
+    xhr.onerror = () => resolve({ ok: false, status: 0, d: { error: "Koneksi terputus." } });
     xhr.send(fd);
   });
-}
-function addToFeed(item) {
-  const em = $("list").querySelector(".empty"); if (em) em.remove();
-  $("list").prepend(render(item)); shown++; updateCount(); fitClamps();
 }
 function mkFd(text, extra) {
   const fd = new FormData();
@@ -654,52 +872,115 @@ $("form").addEventListener("submit", async (e) => {
   if (!files.length) {
     const r = await post(mkFd(text, null), () => {});
     busy = false; $("send").disabled = false; refreshUI();
-    if (r.ok) { ta.value = ""; ta.style.height = ""; toast("Berhasil diupload."); addToFeed(r.d.item); }
+    if (r.ok) { ta.value = ""; ta.style.height = ""; toast("Berhasil diupload."); putRow(r.d.item, null); }
     else toast(r.d.error || "Gagal upload. Coba lagi.", true);
     return;
   }
 
+  if (cur && text) cur = null; // catatan baru = kiriman baru
   const queue = files.filter(x => x.state !== "done");
   const totalBytes = queue.reduce((a, x) => a + x.file.size, 0) || 1;
+  const continuing = !!cur;
   let doneBytes = 0, okN = 0, failN = 0;
   $("bar").hidden = false; $("bar").value = 0; $("upst").hidden = false;
   queue.forEach(x => { x.state = "wait"; x.st.className = "st"; x.st.textContent = "Menunggu"; x.node.classList.remove("err"); });
 
   for (let i = 0; i < queue.length; i++) {
-    const x = queue[i];
+    const x = queue[i], attach = !!cur;
     $("upst").textContent = `Mengupload ${i + 1} dari ${queue.length}: ${x.file.name}`;
     x.st.textContent = "0%";
-    const r = await post(mkFd(text, x.file), (frac) => {
+    let fd;
+    if (attach) { fd = new FormData(); fd.append("token", cur.token); fd.append("file", x.file); }
+    else fd = mkFd(text, x.file);
+    const r = await post(fd, (frac) => {
       x.st.textContent = Math.round(frac * 100) + "%";
       $("bar").value = (doneBytes + frac * x.file.size) / totalBytes * 100;
-    });
+    }, attach ? "/api/messages?attach=" + encodeURIComponent(cur.key) : "/api/messages");
     doneBytes += x.file.size;
     $("bar").value = doneBytes / totalBytes * 100;
     if (r.ok) {
       okN++; x.state = "done"; x.st.className = "st ok"; x.st.textContent = "Selesai";
-      if (text) { text = ""; ta.value = ""; ta.style.height = ""; }
-      addToFeed(r.d.item);
+      if (!attach) {
+        cur = { key: r.d.item.key, token: r.d.token, row: null };
+        if (text) { text = ""; ta.value = ""; ta.style.height = ""; }
+      }
+      cur.row = putRow(r.d.item, cur.row);
     } else {
       failN++; x.state = "fail"; x.node.classList.add("err");
       x.st.textContent = "Gagal"; x.sub.className = "bad"; x.sub.textContent = r.d.error || "Gagal upload.";
+      if (attach && [403, 404, 410].includes(r.status)) cur = null; // kiriman tidak bisa dilanjutkan lagi
     }
   }
 
   busy = false; $("send").disabled = false; $("bar").hidden = true; $("upst").hidden = true;
+  const again = failN && cur;
+  if (!failN) cur = null;
   // buang yang sukses (tampilkan sebentar), sisakan yang gagal untuk dicoba lagi
   const okFiles = files.filter(x => x.state === "done");
   setTimeout(() => okFiles.forEach(x => { if (!busy) removeFile(x); }), 1200);
   files.filter(x => x.state === "fail").forEach(x => { x.state = "wait"; });
   refreshUI();
-  if (failN) toast(`${okN} file berhasil, ${failN} gagal. Yang gagal masih ada di daftar, tekan Upload untuk mencoba lagi.`, true);
-  else toast(okN > 1 ? `${okN} file berhasil diupload.` : "Berhasil diupload.");
+  if (failN) toast(`${okN} file berhasil, ${failN} gagal. Yang gagal masih ada di daftar; tekan Upload untuk menambahkannya ${again ? "ke kiriman yang sama" : "sebagai kiriman baru"}.`, true);
+  else if (okN > 1) toast(`${okN} file berhasil diupload dalam 1 kiriman.`);
+  else toast(continuing ? "File ditambahkan ke kiriman." : "Berhasil diupload.");
 });
 
 // ---- Admin ----
 const dlg = $("dlg");
+async function adminApi(action, params) {
+  const q = new URLSearchParams({ action, ...(params || {}) });
+  try {
+    const r = await fetch("/api/admin?" + q, { method: "POST", headers: { "x-admin-key": adminKey } });
+    return { ok: r.ok, status: r.status, d: await r.json().catch(() => ({})) };
+  } catch { return { ok: false, status: 0, d: { error: "Koneksi terputus." } }; }
+}
+// 30 hari & Selamanya hanya bisa dipilih admin (server juga memeriksa)
+function syncLocks() {
+  const on = !!adminKey;
+  document.querySelectorAll("label.lk input").forEach(i => { i.disabled = !on; });
+  $("lockHint").hidden = on;
+  const c = document.querySelector('input[name="ttl"]:checked');
+  if (!on && (!c || c.disabled)) document.querySelector('input[name="ttl"][value="7"]').checked = true;
+}
+document.querySelectorAll("label.lk").forEach(l => l.addEventListener("click", (e) => {
+  if (!adminKey) { e.preventDefault(); toast("30 hari dan Selamanya terkunci. Masuk lewat menu Admin dulu.", true); }
+}));
+function updateBulk() {
+  $("bulk").hidden = !adminKey;
+  if (!adminKey) return;
+  const n = selected.size, vis = Array.from($("list").querySelectorAll(".row")).filter(r => !r.hidden);
+  $("selN").textContent = n ? n + " dipilih" : "";
+  $("bulkDel").disabled = !n;
+  $("selAll").checked = vis.length > 0 && vis.every(r => selected.has(r._m.key));
+}
+$("selAll").addEventListener("change", () => {
+  const on = $("selAll").checked;
+  $("list").querySelectorAll(".row").forEach(r => {
+    if (r.hidden) return;
+    on ? selected.add(r._m.key) : selected.delete(r._m.key);
+    const cb = r.querySelector(".sel"); if (cb) cb.checked = on;
+  });
+  updateBulk();
+});
+$("bulkDel").addEventListener("click", async () => {
+  const keys = Array.from(selected);
+  if (!keys.length || !confirm(`Hapus ${keys.length} kiriman beserta semua filenya? Ini tidak bisa dibatalkan.`)) return;
+  $("bulkDel").disabled = true; let ok = 0;
+  for (const k of keys) {
+    const r = await fetch("/api/messages?key=" + encodeURIComponent(k), { method: "DELETE", headers: { "x-admin-key": adminKey } }).catch(() => null);
+    if (!r || !r.ok) continue;
+    ok++; selected.delete(k);
+    const row = Array.from($("list").querySelectorAll(".row")).find(x => x._m.key === k);
+    if (row) { row.remove(); shown = Math.max(0, shown - 1); }
+  }
+  applyFilter();
+  toast(ok === keys.length ? ok + " kiriman dihapus." : `${ok} dari ${keys.length} kiriman dihapus.`, ok !== keys.length);
+});
+
 function showAdmin(on) {
   $("loginRow").hidden = on; $("tools").hidden = !on;
   $("adminBtn").classList.toggle("on", on);
+  syncLocks(); updateBulk();
 }
 $("adminBtn").addEventListener("click", () => { dlg.showModal(); if (!adminKey) $("key").focus(); });
 $("dclose").addEventListener("click", () => dlg.close());
@@ -708,33 +989,116 @@ dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
 async function login() {
   const k = $("key").value || adminKey;
   setMsg("astatus", "");
-  const r = await fetch("/api/cleanup?check=1", { method: "POST", headers: { "x-admin-key": k } });
-  if (!r.ok) { setMsg("astatus", "Kunci admin salah.", true); return; }
+  const r = await fetch("/api/admin?action=check", { method: "POST", headers: { "x-admin-key": k } }).catch(() => null);
+  if (!r || !r.ok) { setMsg("astatus", r ? "Kunci admin salah." : "Koneksi terputus.", true); return; }
   adminKey = k; try { sessionStorage.setItem("adminKey", k); } catch {}
   $("key").value = ""; showAdmin(true); load(false);
 }
 $("login").addEventListener("click", login);
 $("key").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); login(); } });
-$("logout").addEventListener("click", () => { adminKey = ""; try { sessionStorage.removeItem("adminKey"); } catch {} showAdmin(false); dlg.close(); load(false); });
+$("logout").addEventListener("click", () => { adminKey = ""; selected.clear(); try { sessionStorage.removeItem("adminKey"); } catch {} showAdmin(false); dlg.close(); load(false); });
 
-$("cleanup").addEventListener("click", async () => {
-  const days = $("cdays").value, all = $("callmsg").checked;
-  if (!confirm(`Hapus ${all ? "pesan dan file" : "file"} yang lebih lama dari ${days} hari? Ini tidak bisa dibatalkan.`)) return;
-  $("cleanup").disabled = true; setMsg("cstatus", "Memproses...");
-  let cur = "", files = 0, msgs = 0;
+// Statistik
+$("statBtn").addEventListener("click", async () => {
+  $("statBtn").disabled = true; setMsg("sstatus", "Menghitung...");
+  const t = { msgs: 0, files: 0, bytes: 0, forever: 0, once: 0 }; let c = "", okAll = false;
+  for (;;) {
+    const r = await adminApi("stats", c ? { cursor: c } : {});
+    if (!r.ok) { setMsg("sstatus", r.d.error || "Gagal menghitung.", true); break; }
+    for (const k in t) t[k] += r.d[k] || 0;
+    setMsg("sstatus", `Menghitung... ${t.msgs} kiriman`);
+    if (r.d.done) { okAll = true; break; }
+    c = r.d.cursor;
+  }
+  if (okAll) {
+    setMsg("sstatus", "");
+    const box = $("stats"); box.textContent = ""; box.hidden = false;
+    [["Kiriman", t.msgs], ["File tersimpan", t.files], ["Total ukuran", fmtSize(t.bytes)], ["Tanpa batas", t.forever], ["Sekali unduh", t.once]].forEach(([l, v]) => {
+      const d = el("div", "stat"); d.append(el("b", "", String(v)), el("span", "", l)); box.appendChild(d);
+    });
+  }
+  $("statBtn").disabled = false;
+});
+
+// Hapus file lama / hapus semua (dipakai bersama)
+async function runCleanup(days, all, btn, statusId) {
+  btn.disabled = true; setMsg(statusId, "Memproses...");
+  let cur2 = "", nf = 0, nm = 0;
   try {
     for (;;) {
-      const q = new URLSearchParams({ days, scope: all ? "all" : "files" }); if (cur) q.set("cursor", cur);
+      const q = new URLSearchParams({ days, scope: all ? "all" : "files" }); if (cur2) q.set("cursor", cur2);
       const r = await fetch("/api/cleanup?" + q, { method: "POST", headers: { "x-admin-key": adminKey } });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) { setMsg("cstatus", d.error || "Gagal membersihkan.", true); break; }
-      files += d.filesDeleted; msgs += d.msgsDeleted;
-      setMsg("cstatus", `Memproses... ${files} file dihapus`);
-      if (d.done) { setMsg("cstatus", `Selesai: ${files} file${all ? " dan " + msgs + " pesan" : ""} dihapus.`); load(false); break; }
-      cur = d.cursor;
+      if (!r.ok) { setMsg(statusId, d.error || "Gagal membersihkan.", true); break; }
+      nf += d.filesDeleted; nm += d.msgsDeleted;
+      setMsg(statusId, `Memproses... ${nf} file dihapus`);
+      if (d.done) { setMsg(statusId, `Selesai: ${nf} file${all ? " dan " + nm + " kiriman" : ""} dihapus.`); load(false); break; }
+      cur2 = d.cursor;
     }
-  } catch { setMsg("cstatus", "Koneksi terputus. Jalankan lagi untuk melanjutkan.", true); }
-  $("cleanup").disabled = false;
+  } catch { setMsg(statusId, "Koneksi terputus. Jalankan lagi untuk melanjutkan.", true); }
+  btn.disabled = false;
+}
+$("cleanup").addEventListener("click", () => {
+  const days = $("cdays").value, all = $("callmsg").checked;
+  if (!confirm(`Hapus ${all ? "pesan dan file" : "file"} yang lebih lama dari ${days} hari? Ini tidak bisa dibatalkan.`)) return;
+  runCleanup(days, all, $("cleanup"), "cstatus");
+});
+$("wipe").addEventListener("click", () => {
+  const t = prompt("Ini menghapus SEMUA kiriman dan file, dan tidak bisa dibatalkan.\nKetik HAPUS untuk melanjutkan:");
+  if (t !== "HAPUS") return;
+  runCleanup(0, true, $("wipe"), "ostatus");
+});
+
+// File yatim: file di KV yang sudah tidak punya kiriman (mis. upload terputus)
+async function scanOrphans(del) {
+  let c = "", found = 0, deleted = 0;
+  for (;;) {
+    const p = {}; if (c) p.cursor = c; if (del) p.del = "1";
+    const r = await adminApi("orphans", p);
+    if (!r.ok) return { err: r.d.error || "Gagal memindai." };
+    found += r.d.found; deleted += r.d.deleted;
+    setMsg("ostatus", (del ? "Menghapus... " : "Memindai... ") + (del ? deleted : found) + " file yatim");
+    if (r.d.done) return { found, deleted };
+    c = r.d.cursor;
+  }
+}
+$("orph").addEventListener("click", async () => {
+  $("orph").disabled = true; setMsg("ostatus", "Memindai...");
+  const a = await scanOrphans(false);
+  if (a.err) setMsg("ostatus", a.err, true);
+  else if (!a.found) setMsg("ostatus", "Tidak ada file yatim.");
+  else if (confirm(`Ditemukan ${a.found} file yatim. Hapus sekarang?`)) {
+    const b = await scanOrphans(true);
+    setMsg("ostatus", b.err || `Selesai: ${b.deleted} file yatim dihapus.`, !!b.err);
+  } else setMsg("ostatus", `${a.found} file yatim dibiarkan.`);
+  $("orph").disabled = false;
+});
+
+// Ubah masa simpan satu kiriman
+const edlg = $("edlg"); let editRow = null;
+function openEdit(row) {
+  editRow = row; const m = row._m;
+  $("edinfo").textContent = m.expiresAt ? "Saat ini dihapus otomatis " + fmtDate(m.expiresAt) + "." : "Saat ini disimpan tanpa batas.";
+  setMsg("edstatus", ""); edlg.showModal();
+}
+$("edclose").addEventListener("click", () => edlg.close());
+edlg.addEventListener("click", (e) => { if (e.target === edlg) edlg.close(); });
+$("edsave").addEventListener("click", async () => {
+  const row = editRow; if (!row) return;
+  const m = row._m, days = $("edays").value, live = m.files.filter(f => !f.gone);
+  $("edsave").disabled = true;
+  try {
+    for (let i = 0; i < live.length; i++) {
+      setMsg("edstatus", `Memperbarui file ${i + 1} dari ${live.length}...`);
+      const r = await adminApi("ttl", { key: m.key, days, fid: live[i].id });
+      if (!r.ok) throw new Error(r.d.error || "Gagal memperbarui file.");
+    }
+    setMsg("edstatus", "Memperbarui kiriman...");
+    const r = await adminApi("ttl", { key: m.key, days });
+    if (!r.ok) throw new Error(r.d.error || "Gagal memperbarui kiriman.");
+    putRow(r.d.item, row); edlg.close(); toast("Masa simpan diperbarui.");
+  } catch (e) { setMsg("edstatus", e.message || "Gagal.", true); }
+  $("edsave").disabled = false;
 });
 
 showAdmin(!!adminKey);

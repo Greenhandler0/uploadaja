@@ -1,20 +1,20 @@
 // GET /api/file/:id
 // - File biasa: tampil/unduh, mendukung Range untuk video/audio
 // - File "sekali unduh": hanya lewat ?dl=1, lalu otomatis dihapus dari KV
+import { norm, putMsg } from "../../_lib/common.js";
+
 const INLINE = /^(image\/(?!svg)|video\/|audio\/)|^application\/pdf$/;
 
 async function consume(env, id, meta) {
   await env.KV.delete("file:" + id);
   if (!meta || !meta.msgKey) return;
-  const msg = await env.KV.get(meta.msgKey, "json");
-  if (!msg || !msg.file) return;
-  msg.file = { name: msg.file.name, type: msg.file.type, size: msg.file.size, gone: true, reason: "downloaded" };
-  const opt = {};
-  if (msg.expiresAt) {
-    if (msg.expiresAt - Date.now() < 90000) return; // sebentar lagi kedaluwarsa sendiri
-    opt.expiration = Math.floor(msg.expiresAt / 1000);
-  }
-  await env.KV.put(meta.msgKey, JSON.stringify(msg), opt);
+  const msg = norm(await env.KV.get(meta.msgKey, "json"));
+  if (!msg) return;
+  const i = msg.files.findIndex((f) => f.id === id);
+  if (i < 0) return;
+  const f = msg.files[i];
+  msg.files[i] = { id, name: f.name, type: f.type, size: f.size, gone: true, reason: "downloaded" };
+  await putMsg(env, meta.msgKey, msg);
 }
 
 export async function onRequestGet({ env, params, request, waitUntil }) {
