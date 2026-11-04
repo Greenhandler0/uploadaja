@@ -36,3 +36,39 @@ export async function putMsg(env, key, msg) {
 }
 
 export const liveFiles = (msg) => (norm(msg).files || []).filter((f) => !f.gone);
+
+// File besar dipecah: KV membatasi 25 MiB per nilai. Potongan 1 di "file:ID" (membawa metadata),
+// potongan berikutnya di "fpart:ID:n". File lama (satu nilai) tetap terbaca (parts tidak ada = 1).
+export const CHUNK = 16 * 1024 * 1024;
+export const partsOf = (size) => Math.max(1, Math.ceil((size || 0) / CHUNK));
+
+export async function delFile(env, id, parts = 1) {
+  await env.KV.delete("file:" + id);
+  for (let i = 1; i < parts; i++) await env.KV.delete(`fpart:${id}:${i}`);
+}
+
+// opt = { expiration } / { expirationTtl } / {}. Kepala ditulis dulu agar upload terputus terdeteksi sebagai file yatim.
+export async function putFile(env, id, buf, meta, opt) {
+  const parts = partsOf(buf.byteLength);
+  try {
+    await env.KV.put("file:" + id, parts > 1 ? buf.slice(0, CHUNK) : buf, { ...opt, metadata: { ...meta, parts } });
+    for (let i = 1; i < parts; i++) await env.KV.put(`fpart:${id}:${i}`, buf.slice(i * CHUNK, (i + 1) * CHUNK), opt);
+  } catch (e) { await delFile(env, id, parts); throw e; }
+}
+
+export async function getFile(env, id) {
+  const { value, metadata } = await env.KV.getWithMetadata("file:" + id, "arrayBuffer");
+  if (!value) return {};
+  const parts = (metadata && metadata.parts) || 1;
+  if (parts === 1) return { value, metadata };
+  const bufs = [value];
+  for (let i = 1; i < parts; i++) {
+    const b = await env.KV.get(`fpart:${id}:${i}`, "arrayBuffer");
+    if (!b) return {};
+    bufs.push(b);
+  }
+  const out = new Uint8Array(bufs.reduce((a, b) => a + b.byteLength, 0));
+  let o = 0;
+  for (const b of bufs) { out.set(new Uint8Array(b), o); o += b.byteLength; }
+  return { value: out.buffer, metadata };
+}

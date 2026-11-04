@@ -239,6 +239,7 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
 .bulk .chk{align-items:center}
 .bulk .chk input{margin:0}
 .bulk .btn{height:30px}
+#fdlg{width:min(680px,94vw)}.crumbs{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:13px}.crumbs .btn{height:30px;padding:0 10px}.ftool{display:flex;flex-wrap:wrap;gap:8px}.ftool .btn{width:auto;height:36px}.flist{display:grid;gap:2px}.flist .fbar{border-radius:10px}.flist .fbar:hover{background:var(--tint)}.flist input[type=checkbox]{width:18px;height:18px;flex:none}.flist .btn.sm{width:auto;height:30px;padding:0 10px;font-size:12px}
 .sec{display:grid;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
 .sec:first-child{border-top:0;padding-top:0}
 .sec h3{margin:0;font-size:13px;font-weight:800;letter-spacing:-.01em}
@@ -273,6 +274,7 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
   <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
   <symbol id="i-open" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
   <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
 </svg>
 
@@ -295,7 +297,7 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
       <label class="drop" id="drop">
         <span class="ic"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg></span>
         <b id="dropT">Pilih atau seret file</b>
-        <span class="sub" id="dropS">Banyak file sekaligus jadi 1 kiriman · maks. 20 MB per file · bisa paste</span>
+        <span class="sub" id="dropS">Banyak file sekaligus jadi 1 kiriman · maks. 30 MB per file · bisa paste</span>
         <input id="file" type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip">
       </label>
 
@@ -377,6 +379,10 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
         <div class="msg" id="sstatus" role="status" aria-live="polite"></div>
       </section>
       <section class="sec">
+        <h3>Folder</h3>
+        <button class="btn" id="fopen" type="button"><svg class="i" aria-hidden="true"><use href="#i-folder"/></svg>Kelola folder</button>
+      </section>
+      <section class="sec">
         <h3>Hapus file lama</h3>
         <div>
           <label class="l" for="cdays">Hapus file yang lebih lama dari</label>
@@ -409,10 +415,29 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
     <div class="msg" id="edstatus" role="status" aria-live="polite"></div>
   </div>
 </dialog>
+<dialog id="fdlg" aria-labelledby="fdtitle">
+  <div class="dh"><span id="fdtitle">Folder</span><button class="btn ghost icon" type="button" id="fdclose" aria-label="Tutup"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <div class="crumbs" id="fcrumbs"></div>
+    <div class="ftool"><button class="btn" id="fnew" type="button">Folder baru</button><button class="btn" id="fall" type="button">Pilih semua</button><button class="btn primary" id="fmv" type="button" style="box-shadow:none" disabled>Pindahkan terpilih</button></div>
+    <div class="flist" id="fsubs"></div>
+    <div class="flist" id="ffiles"></div>
+    <button class="btn" id="fmore" type="button" hidden>Muat lagi</button>
+    <div class="msg" id="fstatus" role="status" aria-live="polite"></div>
+  </div>
+</dialog>
+<dialog id="mdlg" aria-labelledby="mtitle">
+  <div class="dh"><span id="mtitle">Pindahkan</span><button class="btn ghost icon" type="button" id="mclose" aria-label="Tutup"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <div class="msg" id="minfo"></div>
+    <div><label class="l" for="msel">Folder tujuan</label><select class="field" id="msel"></select></div>
+    <button class="btn primary" id="mok" type="button">Pindahkan</button>
+  </div>
+</dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const MAX = 20 * 1024 * 1024;
+const MAX = 30 * 1024 * 1024;
 const $ = (id) => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
 const MAX_FILES = 30;
@@ -534,7 +559,7 @@ function addFiles(list) {
     files.push(x); $("chips").appendChild(chipFor(x));
   }
   const w = [];
-  if (big) w.push(big + " file lebih dari 20 MB dilewati");
+  if (big) w.push(big + " file lebih dari 30 MB dilewati");
   if (over) w.push(over + " file melebihi batas " + MAX_FILES + " file per upload");
   if (dup) w.push(dup + " file sama dilewati");
   if (w.length) toast(w.join(". ") + ".", true);
@@ -604,7 +629,9 @@ function fileBar(m, f, row, att, single) {
   }
   if (adminKey) {
     const x = el("button", "btn ghost icon"); x.type = "button"; x.title = "Hapus file ini saja"; x.setAttribute("aria-label", "Hapus file " + f.name);
-    x.appendChild(ico("trash", true)); x.addEventListener("click", () => delFile(m, f, row)); bar.appendChild(x);
+    x.appendChild(ico("trash", true)); x.addEventListener("click", () => delFile(m, f, row));
+    const mv = el("button", "btn ghost icon"); mv.type = "button"; mv.title = "Pindahkan ke folder"; mv.setAttribute("aria-label", "Pindahkan " + f.name + " ke folder");
+    mv.appendChild(ico("folder", true)); mv.addEventListener("click", () => moveOne(m, f, row)); bar.append(mv, x);
   }
   const dl = el("a", "btn dl"); dl.href = m.oneTime ? f.url + "?dl=1" : f.url; dl.setAttribute("download", f.name);
   dl.setAttribute("aria-label", "Download " + f.name); dl.append(ico("down", true), "Download");
@@ -980,7 +1007,7 @@ $("bulkDel").addEventListener("click", async () => {
 function showAdmin(on) {
   $("loginRow").hidden = on; $("tools").hidden = !on;
   $("adminBtn").classList.toggle("on", on);
-  syncLocks(); updateBulk();
+  syncLocks(); updateBulk(); if (on) loadFolders();
 }
 $("adminBtn").addEventListener("click", () => { dlg.showModal(); if (!adminKey) $("key").focus(); });
 $("dclose").addEventListener("click", () => dlg.close());
@@ -1099,6 +1126,111 @@ $("edsave").addEventListener("click", async () => {
     putRow(r.d.item, row); edlg.close(); toast("Masa simpan diperbarui.");
   } catch (e) { setMsg("edstatus", e.message || "Gagal.", true); }
   $("edsave").disabled = false;
+});
+
+// ---- Folder (admin) ----
+const fdlg = $("fdlg"), mdlg = $("mdlg");
+let folders = [], fcur = "", fitems = [], fcursor = null, ftok = 0, mRes = null; const fsel = new Set();
+async function fApi(action, params) {
+  const q = new URLSearchParams({ action, ...(params || {}) });
+  try {
+    const r = await fetch("/api/folders?" + q, { method: "POST", headers: { "x-admin-key": adminKey } });
+    return { ok: r.ok, d: await r.json().catch(() => ({})) };
+  } catch { return { ok: false, d: { error: "Koneksi terputus." } }; }
+}
+const fById = (id) => folders.find((f) => f.id === id);
+function fPath(id) { const a = []; for (let f = fById(id), n = 0; f && n < 100; f = fById(f.parent), n++) a.unshift(f); return a; }
+const isUnder = (id, anc) => fPath(id).some((f) => f.id === anc);
+async function loadFolders() { const r = await fApi("list"); if (r.ok) folders = r.d.folders || []; return r.ok; }
+
+// Dialog pilih folder tujuan. Hasil: id folder ("" = akar) atau null jika dibatalkan.
+function pickFolder(title, info, exclude) {
+  $("mtitle").textContent = title; $("minfo").textContent = info || "";
+  const s = $("msel"); s.textContent = "";
+  const add = (v, t) => { const o = document.createElement("option"); o.value = v; o.textContent = t; s.appendChild(o); };
+  add("", "Akar (tanpa folder)");
+  folders.filter((f) => !exclude || (f.id !== exclude && !isUnder(f.id, exclude)))
+    .map((f) => ({ id: f.id, p: fPath(f.id).map((x) => x.name).join(" / ") })).sort((a, b) => a.p.localeCompare(b.p)).forEach((x) => add(x.id, x.p));
+  mdlg.returnValue = "";
+  return new Promise((res) => { mRes = res; mdlg.showModal(); });
+}
+mdlg.addEventListener("close", () => { if (mRes) mRes(mdlg.returnValue === "ok" ? $("msel").value : null); mRes = null; });
+$("mok").addEventListener("click", () => mdlg.close("ok"));
+$("mclose").addEventListener("click", () => mdlg.close());
+mdlg.addEventListener("click", (e) => { if (e.target === mdlg) mdlg.close(); });
+
+async function moveOne(m, f, row) {
+  await loadFolders();
+  const t = await pickFolder("Pindahkan file", f.name); if (t === null) return;
+  const r = await fApi("move", { key: m.key, fids: f.id, folder: t });
+  if (r.ok) { putRow(r.d.item, row); toast("File dipindahkan."); } else toast(r.d.error || "Gagal memindahkan.", true);
+}
+
+async function openF(id) { fcur = id || ""; fsel.clear(); fitems = []; fcursor = null; renderF(); await loadF(false); }
+async function loadF(more) {
+  const tok = ++ftok; let c = more ? fcursor : null, got = 0, done = false;
+  for (let i = 0; i < 6 && !done && got < 15; i++) {
+    setMsg("fstatus", "Memuat file...");
+    const r = await fApi("contents", { folder: fcur, ...(c ? { cursor: c } : {}) });
+    if (tok !== ftok) return;
+    if (!r.ok) { setMsg("fstatus", r.d.error || "Gagal memuat.", true); return; }
+    fitems = fitems.concat(r.d.files); got += r.d.files.length; done = r.d.done; c = r.d.cursor;
+  }
+  fcursor = c; $("fmore").hidden = done;
+  setMsg("fstatus", fitems.length || !done ? "" : "Tidak ada file di sini."); renderF();
+}
+function fBtn(text, fn, cls) { const b = el("button", "btn " + (cls || "ghost sm"), text); b.type = "button"; b.addEventListener("click", fn); return b; }
+async function fDo(action, params, okMsg) {
+  const r = await fApi(action, params);
+  if (r.ok) { folders = r.d.folders || folders; if (okMsg) toast(okMsg); renderF(); } else toast(r.d.error || "Gagal.", true);
+  return r.ok;
+}
+function renderF() {
+  const cr = $("fcrumbs"); cr.textContent = "";
+  cr.appendChild(fBtn("Semua file", () => openF("")));
+  fPath(fcur).forEach((f) => { cr.append("/"); cr.appendChild(fBtn(f.name, () => openF(f.id))); });
+  $("fdtitle").textContent = fcur && fById(fcur) ? fById(fcur).name : "Folder";
+
+  const sb = $("fsubs"); sb.textContent = "";
+  folders.filter((f) => f.parent === fcur).sort((a, b) => a.name.localeCompare(b.name)).forEach((f) => {
+    const row = el("div", "fbar"), lead = el("span", "badge"); lead.appendChild(ico("folder"));
+    const t = el("span", "t"), nm = el("b", "", f.name); nm.style.cursor = "pointer"; nm.addEventListener("click", () => openF(f.id));
+    const kids = folders.filter((x) => x.parent === f.id).length;
+    t.append(nm, el("span", "", kids ? kids + " subfolder" : "Folder"));
+    row.append(lead, t,
+      fBtn("Buka", () => openF(f.id)),
+      fBtn("Ubah nama", () => { const n = prompt("Nama baru folder:", f.name); if (n && n.trim()) fDo("rename", { id: f.id, name: n.trim() }, "Nama diubah."); }),
+      fBtn("Pindah", async () => { const t2 = await pickFolder("Pindahkan folder", f.name, f.id); if (t2 !== null) fDo("movefolder", { id: f.id, parent: t2 }, "Folder dipindahkan."); }),
+      fBtn("Hapus", () => { if (confirm('Hapus folder "' + f.name + '"? Isinya TIDAK dihapus: subfolder naik satu tingkat dan file kembali ke "Semua file".')) fDo("delete", { id: f.id }, "Folder dihapus."); }));
+    sb.appendChild(row);
+  });
+
+  const fb = $("ffiles"); fb.textContent = "";
+  fitems.forEach((it) => {
+    const id = it.key + "|" + it.file.id, row = el("label", "fbar");
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = fsel.has(id);
+    cb.addEventListener("change", () => { cb.checked ? fsel.add(id) : fsel.delete(id); updF(); });
+    const t = el("span", "t"); t.append(el("b", "", it.file.name), el("span", "", fmtSize(it.file.size) + " · dari " + it.from + " · " + fmtDate(it.createdAt)));
+    const dl = el("a", "btn dl sm", "Unduh"); dl.href = it.oneTime ? it.file.url + "?dl=1" : it.file.url; dl.setAttribute("download", it.file.name);
+    row.append(cb, el("span", "badge", extOf(it.file.name)), t, dl); fb.appendChild(row);
+  });
+  updF();
+}
+function updF() { const n = fsel.size; $("fmv").disabled = !n; $("fmv").textContent = n ? "Pindahkan terpilih (" + n + ")" : "Pindahkan terpilih"; }
+
+$("fopen").addEventListener("click", async () => { await loadFolders(); fdlg.showModal(); openF(""); });
+$("fdclose").addEventListener("click", () => fdlg.close());
+fdlg.addEventListener("click", (e) => { if (e.target === fdlg) fdlg.close(); });
+$("fmore").addEventListener("click", () => loadF(true));
+$("fnew").addEventListener("click", () => { const n = prompt("Nama folder baru" + (fcur ? " (di dalam " + fById(fcur).name + ")" : "") + ":"); if (n && n.trim()) fDo("create", { name: n.trim(), parent: fcur }, "Folder dibuat."); });
+$("fall").addEventListener("click", () => { const all = fitems.length && fitems.every((it) => fsel.has(it.key + "|" + it.file.id)); fitems.forEach((it) => all ? fsel.delete(it.key + "|" + it.file.id) : fsel.add(it.key + "|" + it.file.id)); renderF(); });
+$("fmv").addEventListener("click", async () => {
+  const t = await pickFolder("Pindahkan " + fsel.size + " file", "", null); if (t === null) return;
+  const by = {}; fsel.forEach((id) => { const [k, f] = id.split("|"); (by[k] = by[k] || []).push(f); });
+  $("fmv").disabled = true; let moved = 0, fail = 0;
+  for (const k of Object.keys(by)) { setMsg("fstatus", "Memindahkan..."); const r = await fApi("move", { key: k, fids: by[k].join(","), folder: t }); if (r.ok) moved += r.d.moved; else fail += by[k].length; }
+  toast(moved + " file dipindahkan" + (fail ? ", " + fail + " gagal" : "") + ".", !!fail);
+  fsel.clear(); load(false); openF(fcur);
 });
 
 showAdmin(!!adminKey);

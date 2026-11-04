@@ -1,12 +1,12 @@
 // GET /api/file/:id
 // - File biasa: tampil/unduh, mendukung Range untuk video/audio
 // - File "sekali unduh": hanya lewat ?dl=1, lalu otomatis dihapus dari KV
-import { norm, putMsg } from "../../_lib/common.js";
+import { norm, putMsg, getFile, delFile } from "../../_lib/common.js";
 
 const INLINE = /^(image\/(?!svg)|video\/|audio\/)|^application\/pdf$/;
 
 async function consume(env, id, meta) {
-  await env.KV.delete("file:" + id);
+  await delFile(env, id, (meta && meta.parts) || 1);
   if (!meta || !meta.msgKey) return;
   const msg = norm(await env.KV.get(meta.msgKey, "json"));
   if (!msg) return;
@@ -18,7 +18,7 @@ async function consume(env, id, meta) {
 }
 
 export async function onRequestGet({ env, params, request, waitUntil }) {
-  const { value, metadata } = await env.KV.getWithMetadata("file:" + params.id, "arrayBuffer");
+  const { value, metadata } = await getFile(env, params.id);
   if (!value) return new Response("File tidak ditemukan atau sudah dihapus.", { status: 404 });
 
   const type = (metadata && metadata.type) || "application/octet-stream";

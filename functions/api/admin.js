@@ -4,7 +4,7 @@
 //   delfile&key=msg:..&fid=..      hapus SATU file dari kiriman (teks & file lain tetap)
 //   ttl&key=msg:..&days=N[&fid=..] ubah masa simpan; dengan fid = file itu saja, tanpa fid = catatan kiriman. N=0 selamanya
 //   orphans[&del=1][&cursor=]      cari/hapus file yatim (file tanpa kiriman)
-import { DAY, json, isAdmin, norm, pub, putMsg } from "../_lib/common.js";
+import { DAY, json, isAdmin, norm, pub, putMsg, getFile, putFile, delFile, partsOf } from "../_lib/common.js";
 
 const TTL_OK = [1, 7, 30, 90, 365, 0];
 const bad = (m, s = 400) => json({ error: m }, s);
@@ -44,7 +44,7 @@ export async function onRequestPost({ env, request }) {
       if (!msg) return bad("Kiriman tidak ditemukan.", 404);
       const i = msg.files.findIndex((f) => f.id === fid && !f.gone);
       if (i < 0) return bad("File tidak ditemukan.", 404);
-      await env.KV.delete("file:" + fid);
+      await delFile(env, fid, partsOf(msg.files[i].size));
       const f = msg.files[i];
       msg.files[i] = { id: fid, name: f.name, type: f.type, size: f.size, gone: true, reason: "admin" };
       await putMsg(env, key, msg);
@@ -55,9 +55,9 @@ export async function onRequestPost({ env, request }) {
     if (!TTL_OK.includes(days)) return bad("Masa simpan tidak valid.");
     const opt = days ? { expirationTtl: days * DAY } : {};
     if (fid) { // satu file: tulis ulang dengan masa simpan baru
-      const { value, metadata } = await env.KV.getWithMetadata("file:" + fid, "arrayBuffer");
+      const { value, metadata } = await getFile(env, fid);
       if (!value) return json({ ok: true, skipped: true });
-      await env.KV.put("file:" + fid, value, { ...opt, metadata });
+      await putFile(env, fid, value, metadata, opt);
       return json({ ok: true });
     }
     const msg = norm(await env.KV.get(key, "json"));
@@ -81,7 +81,7 @@ export async function onRequestPost({ env, request }) {
       const msg = cache.get(m.msgKey);
       if (msg && msg.files.some((f) => f.id === id && !f.gone)) continue;
       found++;
-      if (del) { await env.KV.delete(k.name); deleted++; }
+      if (del) { await delFile(env, id, m.parts || 1); deleted++; }
     }
     return json({ ok: true, found, deleted, done: list.list_complete, cursor: list.list_complete ? null : list.cursor });
   }

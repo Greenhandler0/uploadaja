@@ -3,9 +3,9 @@
 // POST   /api/messages                    -> buat kiriman baru (teks + maks. 1 file pertama)
 // POST   /api/messages?attach=msg:...     -> tambah file ke kiriman yang sama (butuh token dari POST pertama)
 // DELETE /api/messages?key=msg:...        -> hapus kiriman + semua filenya (admin)
-import { DAY, json, isAdmin, norm, pub, putMsg, expOpt, liveFiles } from "../_lib/common.js";
+import { DAY, json, isAdmin, norm, pub, putMsg, expOpt, liveFiles, putFile, delFile, partsOf } from "../_lib/common.js";
 
-const MAX_FILE = 20 * 1024 * 1024; // 20 MB per file (batas KV per nilai: 25 MiB)
+const MAX_FILE = 30 * 1024 * 1024; // 30 MB per file (disimpan berpotongan 16 MiB karena batas KV 25 MiB per nilai)
 const MAX_FILES = 30;              // file per kiriman
 const MAX_TEXT = 1000000;          // karakter
 const PUBLIC_DAYS = [1, 7];        // boleh dipilih siapa saja
@@ -34,7 +34,7 @@ export async function onRequestGet({ env, request }) {
 
 function checkFile(file) {
   if (!file || typeof file !== "object" || !(file.size > 0)) return "File kosong atau tidak valid.";
-  if (file.size > MAX_FILE) return "File terlalu besar. Maksimal 20 MB.";
+  if (file.size > MAX_FILE) return "File terlalu besar. Maksimal 30 MB.";
   return null;
 }
 
@@ -71,14 +71,12 @@ async function create(env, request, form) {
   if (hasFile) {
     fid = crypto.randomUUID();
     const type = file.type || "application/octet-stream";
-    await env.KV.put("file:" + fid, await file.arrayBuffer(), {
-      ...expOpt(msg),
-      metadata: { type, name: file.name || "file", oneTime, msgKey: key, at: createdAt },
-    });
+    try { await putFile(env, fid, await file.arrayBuffer(), { type, name: file.name || "file", oneTime, msgKey: key, at: createdAt }, expOpt(msg)); }
+    catch { return json({ error: "Gagal menyimpan file." }, 500); }
     msg.files.push({ id: fid, name: file.name || "file", type, size: file.size, url: "/api/file/" + fid });
   }
   try { await env.KV.put(key, JSON.stringify(msg), expOpt(msg)); }
-  catch (e) { if (fid) await env.KV.delete("file:" + fid); return json({ error: "Gagal menyimpan." }, 500); }
+  catch (e) { if (fid) await delFile(env, fid, partsOf(file.size)); return json({ error: "Gagal menyimpan." }, 500); }
   return json({ ok: true, item: pub(msg, key), token: tok }, 201);
 }
 
@@ -98,14 +96,12 @@ async function addFile(env, form, key) {
 
   const fid = crypto.randomUUID();
   const type = file.type || "application/octet-stream";
-  await env.KV.put("file:" + fid, await file.arrayBuffer(), {
-    ...expOpt(msg),
-    metadata: { type, name: file.name || "file", oneTime: !!msg.oneTime, msgKey: key, at: Date.now() },
-  });
+  try { await putFile(env, fid, await file.arrayBuffer(), { type, name: file.name || "file", oneTime: !!msg.oneTime, msgKey: key, at: Date.now() }, expOpt(msg)); }
+  catch { return json({ error: "Gagal menyimpan file." }, 500); }
   msg.files.push({ id: fid, name: file.name || "file", type, size: file.size, url: "/api/file/" + fid });
   let saved = false;
   try { saved = await putMsg(env, key, msg); } catch {}
-  if (!saved) { await env.KV.delete("file:" + fid); return json({ error: "Gagal menambah file ke kiriman." }, 500); }
+  if (!saved) { await delFile(env, fid, partsOf(file.size)); return json({ error: "Gagal menambah file ke kiriman." }, 500); }
   return json({ ok: true, item: pub(msg, key) }, 201);
 }
 
@@ -114,7 +110,7 @@ export async function onRequestDelete({ env, request }) {
   const key = new URL(request.url).searchParams.get("key") || "";
   if (!key.startsWith("msg:")) return json({ error: "Key tidak valid." }, 400);
   const msg = await env.KV.get(key, "json");
-  if (msg) for (const f of liveFiles(msg)) await env.KV.delete("file:" + f.id);
+  if (msg) for (const f of liveFiles(msg)) await delFile(env, f.id, partsOf(f.size));
   await env.KV.delete(key);
   return json({ ok: true });
 }

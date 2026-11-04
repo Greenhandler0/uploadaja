@@ -2,7 +2,7 @@
 // POST /api/cleanup?check=1                                (cek kunci admin)
 // days=0 + scope=all  -> hapus SEMUA kiriman.
 // Diproses per batch kecil; ulangi dengan "cursor" sampai selesai.
-import { DAY, json, isAdmin, norm, liveFiles, putMsg } from "../_lib/common.js";
+import { DAY, json, isAdmin, norm, liveFiles, putMsg, delFile, partsOf } from "../_lib/common.js";
 
 export async function onRequestPost({ env, request }) {
   if (!isAdmin(env, request)) return json({ error: "Kunci admin salah." }, 401);
@@ -28,10 +28,10 @@ export async function onRequestPost({ env, request }) {
       if (!msg) continue;
       const live = liveFiles(msg);
       if (scope === "all") {
-        for (const f of live) { await env.KV.delete("file:" + f.id); ops++; filesDeleted++; }
+        for (const f of live) { await delFile(env, f.id, partsOf(f.size)); ops += partsOf(f.size); filesDeleted++; }
         await env.KV.delete(k.name); ops++; msgsDeleted++;
       } else if (live.length) {
-        for (const f of live) { await env.KV.delete("file:" + f.id); ops++; filesDeleted++; }
+        for (const f of live) { await delFile(env, f.id, partsOf(f.size)); ops += partsOf(f.size); filesDeleted++; }
         msg.files = msg.files.map((f) => f.gone ? f : { id: f.id, name: f.name, type: f.type, size: f.size, gone: true, reason: "cleanup" });
         await putMsg(env, k.name, msg); ops++;
       }
