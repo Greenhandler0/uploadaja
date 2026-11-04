@@ -1,4 +1,5 @@
-// POST /api/folders?action=...   (header x-admin-key; semua aksi khusus admin)
+// GET  /api/folders[?folder=ID]  publik: daftar folder / isi folder
+// POST /api/folders?action=...   (header x-admin-key; semua aksi pengelolaan khusus admin)
 //   list                              daftar folder (daftar datar: id, name, parent)
 //   create&name=&parent=              buat folder (parent kosong = akar)
 //   rename&id=&name=                  ubah nama folder
@@ -11,6 +12,34 @@ import { json, isAdmin, norm, pub, putMsg } from "../_lib/common.js";
 
 const bad = (m, s = 400) => json({ error: m }, s);
 const MAX_FOLDERS = 500;
+
+// File dalam satu folder (folder kosong = file yang belum masuk folder), dipindai per batch 50 kiriman.
+async function contents(env, fs, folder, cursor) {
+  const has = (id) => fs.some((f) => f.id === id);
+  const list = await env.KV.list({ prefix: "msg:", limit: 50, cursor });
+  const all = await Promise.all(list.keys.map(async (k) => [k.name, await env.KV.get(k.name, "json")]));
+  const files = [];
+  for (const [key, v] of all) {
+    if (!v) continue;
+    norm(v);
+    for (const f of v.files) {
+      if (f.gone) continue;
+      if ((f.folder && has(f.folder) ? f.folder : "") !== folder) continue;
+      files.push({ key, from: v.name, createdAt: v.createdAt, expiresAt: v.expiresAt, oneTime: !!v.oneTime, file: f });
+    }
+  }
+  return json({ ok: true, files, done: list.list_complete, cursor: list.list_complete ? null : list.cursor });
+}
+
+// GET publik (tanpa kunci): daftar folder, dan isi satu folder (?folder=ID[&cursor=]). Pengelolaan tetap khusus admin (POST).
+export async function onRequestGet({ env, request }) {
+  const p = new URL(request.url).searchParams;
+  const fs = (await env.KV.get("folders", "json")) || [];
+  const folder = p.get("folder") || "";
+  if (!folder) return json({ ok: true, folders: fs });
+  if (!fs.some((f) => f.id === folder)) return bad("Folder tidak ditemukan.", 404);
+  return contents(env, fs, folder, p.get("cursor") || undefined);
+}
 
 export async function onRequestPost({ env, request }) {
   if (!isAdmin(env, request)) return bad("Kunci admin salah.", 401);
@@ -75,22 +104,7 @@ export async function onRequestPost({ env, request }) {
     return json({ ok: true, moved: n, item: pub(msg, key) });
   }
 
-  if (action === "contents") {
-    const folder = p.get("folder") || "";
-    const list = await env.KV.list({ prefix: "msg:", limit: 50, cursor: p.get("cursor") || undefined });
-    const all = await Promise.all(list.keys.map(async (k) => [k.name, await env.KV.get(k.name, "json")]));
-    const files = [];
-    for (const [key, v] of all) {
-      if (!v) continue;
-      norm(v);
-      for (const f of v.files) {
-        if (f.gone) continue;
-        if ((f.folder && has(f.folder) ? f.folder : "") !== folder) continue;
-        files.push({ key, from: v.name, createdAt: v.createdAt, expiresAt: v.expiresAt, oneTime: !!v.oneTime, file: f });
-      }
-    }
-    return json({ ok: true, files, done: list.list_complete, cursor: list.list_complete ? null : list.cursor });
-  }
+  if (action === "contents") return contents(env, fs, p.get("folder") || "", p.get("cursor") || undefined);
 
   return bad("Aksi tidak dikenal.");
 }

@@ -62,3 +62,9 @@ Struktur (folder proyek: upload-aja):
 - "Semua file" menampilkan file yang belum masuk folder. Centang beberapa file > "Pindahkan terpilih", atau pakai ikon folder di tiap file pada daftar kiriman.
 - Folder hanya pengelompokan: masa simpan file tetap berlaku. Agar file di folder tidak hilang otomatis, ubah masa simpan kiriman ke "Selamanya".
 - Data: daftar folder di key KV "folders"; keanggotaan disimpan di tiap file (msg.files[i].folder).
+
+## Pembaruan: folder tampil di halaman utama, semua jenis file
+- File yang sudah dipindah ke folder TIDAK tampil lagi di daftar kiriman. Kiriman yang semua filenya sudah di folder (dan tanpa teks) ikut disembunyikan; teksnya tetap tampil bila ada.
+- Folder tampil sebagai deretan tombol di atas daftar kiriman (untuk semua pengunjung). Klik untuk membuka isinya; subfolder, pratinjau gambar, Buka, dan Unduh tersedia. Mengelola folder tetap khusus admin.
+- API publik: GET /api/folders dan GET /api/folders?folder=ID (hanya baca).
+- Upload menerima semua jenis/ekstensi file (pembatas `accept` di pemilih file dihapus; server tidak memfilter tipe). File kosong (0 byte) juga diterima. Folder dari komputer yang di-drag tidak bisa diunggah langsung (batasan browser): jadikan .zip.

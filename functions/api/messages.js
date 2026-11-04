@@ -33,7 +33,7 @@ export async function onRequestGet({ env, request }) {
 }
 
 function checkFile(file) {
-  if (!file || typeof file !== "object" || !(file.size > 0)) return "File kosong atau tidak valid.";
+  if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function") return "File tidak valid.";
   if (file.size > MAX_FILE) return "File terlalu besar. Maksimal 30 MB.";
   return null;
 }
@@ -50,7 +50,7 @@ async function create(env, request, form) {
   const text = (form.get("text") || "").toString().trim();
   if (text.length > MAX_TEXT) return json({ error: "Teks terlalu panjang. Maksimal 1.000.000 karakter." }, 413);
   const file = form.get("file");
-  const hasFile = file && typeof file === "object" && file.size > 0;
+  const hasFile = !!file && typeof file === "object" && typeof file.arrayBuffer === "function";
   if (!text && !hasFile) return json({ error: "Tulis teks atau pilih file dulu." }, 400);
   if (hasFile) { const bad = checkFile(file); if (bad) return json({ error: bad }, 413); }
 
