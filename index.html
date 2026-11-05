@@ -1203,6 +1203,23 @@ async function fDo(action, params, okMsg) {
   if (r.ok) { folders = r.d.folders || folders; if (okMsg) toast(okMsg); renderBar(); renderF(); if (action === "delete") load(false); } else toast(r.d.error || "Gagal.", true);
   return r.ok;
 }
+// Salin isi file teks (txt, md, csv, json, kode, dll). File "sekali unduh" tidak diberi tombol ini karena membaca = menghabiskan file.
+const TXT_EXT = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|html?|css|js|mjs|ts|tsx|jsx|vue|py|java|kt|swift|c|h|cpp|cs|go|rs|rb|php|r|sh|bat|ps1|sql|yaml|yml|toml|ini|cfg|conf|env|log|srt|vtt|tex|svg)$/i;
+const isTextFile = (f) => /^text\//.test(f.type) || /json|xml|javascript|yaml|x-sh|sql|csv/.test(f.type) || TXT_EXT.test(f.name);
+async function copyFileText(f, btn) {
+  if (f.size > 5 * 1024 * 1024) { toast("File teks terlalu besar untuk disalin (maks. 5 MB). Silakan unduh.", true); return; }
+  const old = btn.textContent; btn.disabled = true; btn.textContent = "Menyalin...";
+  let done = false;
+  try {
+    const r = await fetch(f.url); if (!r.ok) throw new Error("fetch");
+    const t = await r.text();
+    if (t.includes("\u0000")) toast("Ini bukan file teks, tidak bisa disalin. Silakan unduh.", true);
+    else if (!t) toast("File ini kosong, tidak ada teks untuk disalin.", true);
+    else { await copyText(t); done = true; toast("Teks dari " + f.name + " disalin."); }
+  } catch { toast("Gagal menyalin teks.", true); }
+  btn.disabled = false; btn.textContent = done ? "Tersalin" : old;
+  if (done) setTimeout(() => { btn.textContent = old; }, 1800);
+}
 function renderF() {
   const adm = !!adminKey; document.querySelector("#fdlg .ftool").hidden = !adm;
   const cr = $("fcrumbs"); cr.textContent = "";
@@ -1234,7 +1251,9 @@ function renderF() {
     let lead = el("span", "badge", extOf(it.file.name)), op = null;
     if (!it.oneTime && isImg(it.file.type)) { lead = el("a", "badge th"); lead.href = it.file.url; lead.target = "_blank"; lead.rel = "noopener"; const im = document.createElement("img"); im.src = it.file.url; im.loading = "lazy"; im.alt = ""; lead.appendChild(im); }
     if (!it.oneTime && INL.test(it.file.type)) { op = el("a", "btn ghost sm", "Buka"); op.href = it.file.url; op.target = "_blank"; op.rel = "noopener"; }
-    row.append(cb, lead, t); if (op) row.appendChild(op); row.appendChild(dl); fb.appendChild(row);
+    row.append(cb, lead, t);
+    if (!it.oneTime && isTextFile(it.file)) { const cp = fBtn("Salin teks", () => copyFileText(it.file, cp)); cp.title = "Salin isi file ke papan klip"; row.appendChild(cp); }
+    if (op) row.appendChild(op); row.appendChild(dl); fb.appendChild(row);
   });
   updF();
 }

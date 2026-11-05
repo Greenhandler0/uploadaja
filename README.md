@@ -68,3 +68,5 @@ Struktur (folder proyek: upload-aja):
 - Folder tampil sebagai deretan tombol di atas daftar kiriman (untuk semua pengunjung). Klik untuk membuka isinya; subfolder, pratinjau gambar, Buka, dan Unduh tersedia. Mengelola folder tetap khusus admin.
 - API publik: GET /api/folders dan GET /api/folders?folder=ID (hanya baca).
 - Upload menerima semua jenis/ekstensi file (pembatas `accept` di pemilih file dihapus; server tidak memfilter tipe). File kosong (0 byte) juga diterima. Folder dari komputer yang di-drag tidak bisa diunggah langsung (batasan browser): jadikan .zip.
+
+- Di dalam folder, file teks (txt, md, csv, json, kode, dll; maks. 5 MB) punya tombol "Salin teks" untuk menyalin isinya. File "sekali unduh" tidak diberi tombol ini agar tidak terhapus tanpa sengaja.
