@@ -5,7 +5,7 @@
 //   rename&id=&name=                  ubah nama folder
 //   movefolder&id=&parent=            pindahkan folder ke folder lain (dicegah masuk ke dirinya/turunannya)
 //   delete&id=                        hapus folder; subfolder naik satu tingkat, file kembali ke "tanpa folder" (file TIDAK dihapus)
-//   move&key=msg:..&fids=a,b&folder=  pindahkan file dalam satu kiriman ke folder (folder kosong = akar)
+//   move&key=msg:..&fids=a,b[&text=1]&folder=  pindahkan file (dan/atau teks) satu kiriman ke folder (folder kosong = akar)
 //   contents&folder=[&cursor=]        file di folder itu (folder kosong = file yang belum masuk folder), dipindai per batch
 // Folder disimpan di satu key KV "folders"; keanggotaan file disimpan di msg.files[i].folder.
 import { json, isAdmin, norm, pub, putMsg } from "../_lib/common.js";
@@ -26,6 +26,10 @@ async function contents(env, fs, folder, cursor) {
       if (f.gone) continue;
       if ((f.folder && has(f.folder) ? f.folder : "") !== folder) continue;
       files.push({ key, from: v.name, createdAt: v.createdAt, expiresAt: v.expiresAt, oneTime: !!v.oneTime, file: f });
+    }
+    // Teks kiriman juga bisa masuk folder (tfolder); dikirim berupa cuplikan 2000 karakter.
+    if (v.text && (v.tfolder && has(v.tfolder) ? v.tfolder : "") === folder) {
+      files.push({ key, from: v.name, createdAt: v.createdAt, expiresAt: v.expiresAt, oneTime: !!v.oneTime, text: v.text.slice(0, 2000), truncated: v.text.length > 2000 });
     }
   }
   return json({ ok: true, files, done: list.list_complete, cursor: list.list_complete ? null : list.cursor });
@@ -89,7 +93,8 @@ export async function onRequestPost({ env, request }) {
   if (action === "move") {
     const key = p.get("key") || "", folder = p.get("folder") || "";
     const fids = (p.get("fids") || "").split(",").filter(Boolean);
-    if (!key.startsWith("msg:") || !fids.length) return bad("Permintaan tidak valid.");
+    const withText = p.get("text") === "1"; // pindahkan juga teks kiriman (msg.tfolder)
+    if (!key.startsWith("msg:") || (!fids.length && !withText)) return bad("Permintaan tidak valid.");
     if (!has(folder)) return bad("Folder tujuan tidak ada.", 404);
     const msg = norm(await env.KV.get(key, "json"));
     if (!msg) return bad("Kiriman tidak ditemukan.", 404);
@@ -99,7 +104,8 @@ export async function onRequestPost({ env, request }) {
       if (folder) f.folder = folder; else delete f.folder;
       n++;
     }
-    if (!n) return bad("File tidak ditemukan.", 404);
+    if (withText && msg.text) { if (folder) msg.tfolder = folder; else delete msg.tfolder; n++; }
+    if (!n) return bad("Item tidak ditemukan.", 404);
     if (!(await putMsg(env, key, msg))) return bad("Kiriman sebentar lagi kedaluwarsa, tidak bisa diubah.", 410);
     return json({ ok: true, moved: n, item: pub(msg, key) });
   }

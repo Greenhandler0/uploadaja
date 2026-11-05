@@ -70,3 +70,5 @@ Struktur (folder proyek: upload-aja):
 - Upload menerima semua jenis/ekstensi file (pembatas `accept` di pemilih file dihapus; server tidak memfilter tipe). File kosong (0 byte) juga diterima. Folder dari komputer yang di-drag tidak bisa diunggah langsung (batasan browser): jadikan .zip.
 
 - Di dalam folder, file teks (txt, md, csv, json, kode, dll; maks. 5 MB) punya tombol "Salin teks" untuk menyalin isinya. File "sekali unduh" tidak diberi tombol ini agar tidak terhapus tanpa sengaja.
+
+- Teks kiriman juga bisa dimasukkan ke folder (ikon folder di baris kiriman, khusus admin; atau centang di dalam folder). Teks yang sudah di folder tidak tampil di daftar utama, dan di dalam folder tersedia tombol Salin teks dan Unduh (.txt). Disimpan di msg.tfolder.

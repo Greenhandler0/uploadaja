@@ -770,9 +770,13 @@ async function delOne(row) {
 }
 
 const inFolder = (f) => !!(f.folder && fById(f.folder));
-const allMoved = (m) => { const live = (m.files || []).filter(f => !f.gone); return !m.text && live.length > 0 && live.every(inFolder); };
+const textIn = (m) => !!(m.tfolder && fById(m.tfolder));
+const allMoved = (m) => {
+  const live = (m.files || []).filter(f => !f.gone), th = !!m.text && textIn(m), fh = live.length > 0 && live.every(inFolder);
+  return (th || fh) && !((m.text && !th) || live.some(f => !inFolder(f)));
+};
 function render(full) {
-  const m = { ...full, files: full.files.filter(f => !inFolder(f)) }; // file di folder tidak tampil di daftar utama
+  const m = { ...full, files: full.files.filter(f => !inFolder(f)), text: textIn(full) ? "" : full.text }; // teks/file yang sudah di folder tidak tampil di daftar utama
   const row = el("article", "row"); row._m = full;
   row.appendChild(avatar(m.name));
   const body = el("div"); body.style.minWidth = "0"; row.appendChild(body);
@@ -790,7 +794,9 @@ function render(full) {
     ed.addEventListener("click", () => openEdit(row));
     const del = el("button", "btn ghost icon"); del.type = "button"; del.title = "Hapus kiriman"; del.setAttribute("aria-label", "Hapus kiriman ini"); del.appendChild(ico("trash", true));
     del.addEventListener("click", () => delOne(row));
-    adm.append(cb, ed, del); head.appendChild(adm);
+    adm.append(cb, ed); // tombol pindah teks ke folder (hanya jika kiriman punya teks)
+    if (full.text) { const mt = el("button", "btn ghost icon"); mt.type = "button"; mt.title = "Pindahkan teks ke folder"; mt.setAttribute("aria-label", "Pindahkan teks ke folder"); mt.appendChild(ico("folder", true)); mt.addEventListener("click", () => moveText(full, row)); adm.appendChild(mt); }
+    adm.append(del); head.appendChild(adm);
   }
   body.appendChild(head);
 
@@ -1183,6 +1189,18 @@ function renderBar() {
   bar.appendChild(el("b", "", "Folder"));
   roots.forEach(f => { const b = el("button", "fchip"); b.type = "button"; b.append(ico("folder", true), f.name); b.addEventListener("click", () => { fdlg.showModal(); openF(f.id); }); bar.appendChild(b); });
 }
+async function moveText(m, row) {
+  await loadFolders();
+  const t = await pickFolder("Pindahkan teks", (m.text || "").slice(0, 80)); if (t === null) return;
+  const r = await fApi("move", { key: m.key, text: "1", folder: t });
+  if (r.ok) { putRow(r.d.item, row); toast("Teks dipindahkan."); } else toast(r.d.error || "Gagal memindahkan.", true);
+}
+async function fullText(it) {
+  if (!it.truncated) return it.text;
+  const r = await fetch("/api/messages?key=" + encodeURIComponent(it.key)); if (!r.ok) throw new Error("load");
+  return (await r.json()).text;
+}
+const iid = (it) => it.key + "|" + (it.file ? it.file.id : "@text");
 async function openF(id) { fcur = id || ""; fsel.clear(); fitems = []; fcursor = null; renderF(); await loadF(false); }
 async function loadF(more) {
   const tok = ++ftok; let c = more ? fcursor : null, got = 0, done = false;
@@ -1195,7 +1213,7 @@ async function loadF(more) {
     fitems = fitems.concat(r.d.files); got += r.d.files.length; done = r.d.done; c = r.d.cursor;
   }
   fcursor = c; $("fmore").hidden = done;
-  setMsg("fstatus", fitems.length || !done ? "" : "Tidak ada file di sini."); renderF();
+  setMsg("fstatus", fitems.length || !done ? "" : "Tidak ada isi di sini."); renderF();
 }
 function fBtn(text, fn, cls) { const b = el("button", "btn " + (cls || "ghost sm"), text); b.type = "button"; b.addEventListener("click", fn); return b; }
 async function fDo(action, params, okMsg) {
@@ -1243,7 +1261,15 @@ function renderF() {
 
   const fb = $("ffiles"); fb.textContent = "";
   fitems.forEach((it) => {
-    const id = it.key + "|" + it.file.id, row = el("label", "fbar");
+    const id = iid(it), row = el("label", "fbar");
+    if (!it.file) { // item teks
+      const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = fsel.has(id); cb.hidden = !adm;
+      cb.addEventListener("change", () => { cb.checked ? fsel.add(id) : fsel.delete(id); updF(); });
+      const t = el("span", "t"); t.append(el("b", "", it.text.replace(/\s+/g, " ").slice(0, 90) || "(teks kosong)"), el("span", "", "Teks · dari " + it.from + " · " + fmtDate(it.createdAt)));
+      const cp = fBtn("Salin teks", async () => { try { await copyText(await fullText(it)); cp.textContent = "Tersalin"; setTimeout(() => { cp.textContent = "Salin teks"; }, 1800); toast("Teks disalin."); } catch { toast("Gagal menyalin teks.", true); } });
+      const dt = fBtn("Unduh", async () => { try { saveBlob(new Blob([await fullText(it)], { type: "text/plain;charset=utf-8" }), "upload-aja-" + new Date(it.createdAt).toISOString().slice(0, 10) + ".txt"); } catch { toast("Gagal mengunduh teks.", true); } });
+      row.append(cb, el("span", "badge", "TXT"), t, cp, dt); fb.appendChild(row); return;
+    }
     const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = fsel.has(id); cb.hidden = !adm;
     cb.addEventListener("change", () => { cb.checked ? fsel.add(id) : fsel.delete(id); updF(); });
     const t = el("span", "t"); t.append(el("b", "", it.file.name), el("span", "", fmtSize(it.file.size) + " · dari " + it.from + " · " + fmtDate(it.createdAt)));
@@ -1264,12 +1290,13 @@ $("fdclose").addEventListener("click", () => fdlg.close());
 fdlg.addEventListener("click", (e) => { if (e.target === fdlg) fdlg.close(); });
 $("fmore").addEventListener("click", () => loadF(true));
 $("fnew").addEventListener("click", () => { const n = prompt("Nama folder baru" + (fcur ? " (di dalam " + fById(fcur).name + ")" : "") + ":"); if (n && n.trim()) fDo("create", { name: n.trim(), parent: fcur }, "Folder dibuat."); });
-$("fall").addEventListener("click", () => { const all = fitems.length && fitems.every((it) => fsel.has(it.key + "|" + it.file.id)); fitems.forEach((it) => all ? fsel.delete(it.key + "|" + it.file.id) : fsel.add(it.key + "|" + it.file.id)); renderF(); });
+$("fall").addEventListener("click", () => { const all = fitems.length && fitems.every((it) => fsel.has(iid(it))); fitems.forEach((it) => all ? fsel.delete(iid(it)) : fsel.add(iid(it))); renderF(); });
 $("fmv").addEventListener("click", async () => {
   const t = await pickFolder("Pindahkan " + fsel.size + " file", "", null); if (t === null) return;
   const by = {}; fsel.forEach((id) => { const [k, f] = id.split("|"); (by[k] = by[k] || []).push(f); });
+  const mvp = (k) => ({ key: k, fids: by[k].filter((x) => x !== "@text").join(","), ...(by[k].includes("@text") ? { text: "1" } : {}), folder: t });
   $("fmv").disabled = true; let moved = 0, fail = 0;
-  for (const k of Object.keys(by)) { setMsg("fstatus", "Memindahkan..."); const r = await fApi("move", { key: k, fids: by[k].join(","), folder: t }); if (r.ok) moved += r.d.moved; else fail += by[k].length; }
+  for (const k of Object.keys(by)) { setMsg("fstatus", "Memindahkan..."); const r = await fApi("move", mvp(k)); if (r.ok) moved += r.d.moved; else fail += by[k].length; }
   toast(moved + " file dipindahkan" + (fail ? ", " + fail + " gagal" : "") + ".", !!fail);
   fsel.clear(); load(false); openF(fcur);
 });
