@@ -7,7 +7,33 @@ export const json = (data, status = 200) =>
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
 
+// Untuk AKSI UBAH (hapus, ubah masa simpan, dll.): hanya header x-admin-key (kebal CSRF).
 export const isAdmin = (env, req) => !!env.ADMIN_KEY && req.headers.get("x-admin-key") === env.ADMIN_KEY;
+
+// Untuk MELIHAT/MENGUNDUH: header x-admin-key ATAU cookie sesi admin "adm".
+// Cookie diperlukan karena <img src>, <video src>, dan link unduhan tidak bisa mengirim header kustom.
+// Isi cookie = hash turunan dari ADMIN_KEY (bukan kuncinya), HttpOnly + SameSite=Strict, hanya untuk /api.
+export async function adminToken(env) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("upload-aja-view:" + env.ADMIN_KEY));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+const safeEq = (a, b) => {
+  if (a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+};
+export async function canViewPrivate(env, req) {
+  if (!env.ADMIN_KEY) return false;
+  if (isAdmin(env, req)) return true;
+  const m = /(?:^|;\s*)adm=([0-9a-f]+)/.exec(req.headers.get("cookie") || "");
+  return !!m && safeEq(m[1], await adminToken(env));
+}
+export const adminCookie = (token) => `adm=${token}; Path=/api; HttpOnly; Secure; SameSite=Strict`;
+export const clearAdminCookie = () => "adm=; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=0";
+
+// Kiriman "Selamanya" (tanpa expiresAt) bersifat privat: hanya admin yang boleh melihat/mengunduh.
+export const isPrivateMsg = (msg) => !!msg && !msg.expiresAt;
 
 // Data lama menyimpan satu file di msg.file. Ubah ke msg.files (array) agar semua kode seragam.
 export function norm(msg) {

@@ -1,7 +1,9 @@
 # Upload Aja (Cloudflare Pages + KV)
 
 Struktur (folder proyek: upload-aja):
-  index.html
+  index.html                      (kerangka halaman)
+  style.css                       (semua gaya/tampilan)
+  app.js                          (semua logika halaman)
   functions/_lib/common.js        (helper bersama, bukan route)
   functions/api/messages.js
   functions/api/admin.js          (BARU: statistik, hapus 1 file, ubah masa simpan, file yatim)
@@ -72,3 +74,11 @@ Struktur (folder proyek: upload-aja):
 - Di dalam folder, file teks (txt, md, csv, json, kode, dll; maks. 5 MB) punya tombol "Salin teks" untuk menyalin isinya. File "sekali unduh" tidak diberi tombol ini agar tidak terhapus tanpa sengaja.
 
 - Teks kiriman juga bisa dimasukkan ke folder (ikon folder di baris kiriman, khusus admin; atau centang di dalam folder). Teks yang sudah di folder tidak tampil di daftar utama, dan di dalam folder tersedia tombol Salin teks dan Unduh (.txt). Disimpan di msg.tfolder.
+
+## Pembaruan: file "Selamanya" hanya bisa dilihat admin
+- Kiriman dengan masa simpan **Selamanya** bersifat privat. Non-admin TIDAK bisa melihatnya di daftar, di folder (GET /api/folders), lewat /api/messages?key=..., maupun mengunduh filenya lewat /api/file/ID (dibalas 404, sama seperti "tidak ada", jadi keberadaannya tidak bocor). Dicek di server.
+- Admin melihatnya lewat header `x-admin-key` (daftar/teks) dan cookie sesi `adm` (gambar, video, link unduhan, yang tidak bisa mengirim header). Cookie dipasang saat login admin (`/api/admin?action=check`), HttpOnly + Secure + SameSite=Strict, Path=/api, berlaku selama sesi browser, dan berisi hash turunan, bukan ADMIN_KEY. Keluar dari admin menghapusnya (`action=logout`).
+- Cookie hanya untuk MELIHAT/MENGUNDUH. Semua aksi ubah/hapus tetap wajib header `x-admin-key`.
+- Mengubah masa simpan kiriman dari/ke Selamanya langsung mengubah visibilitasnya. Respons file privat memakai `private, no-store`.
+- File tanpa kiriman induk (yatim) juga hanya bisa dibuka admin.
+- Catatan: file lama dari versi awal yang tidak punya `msgKey` di metadata tidak bisa dicek statusnya (dianggap publik). Mengubah masa simpannya lewat menu Admin akan mengisi `msgKey` otomatis.

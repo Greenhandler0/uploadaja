@@ -8,19 +8,20 @@
 //   move&key=msg:..&fids=a,b[&text=1]&folder=  pindahkan file (dan/atau teks) satu kiriman ke folder (folder kosong = akar)
 //   contents&folder=[&cursor=]        file di folder itu (folder kosong = file yang belum masuk folder), dipindai per batch
 // Folder disimpan di satu key KV "folders"; keanggotaan file disimpan di msg.files[i].folder.
-import { json, isAdmin, norm, pub, putMsg } from "../_lib/common.js";
+import { json, isAdmin, canViewPrivate, isPrivateMsg, norm, pub, putMsg } from "../_lib/common.js";
 
 const bad = (m, s = 400) => json({ error: m }, s);
 const MAX_FOLDERS = 500;
 
 // File dalam satu folder (folder kosong = file yang belum masuk folder), dipindai per batch 50 kiriman.
-async function contents(env, fs, folder, cursor) {
+async function contents(env, fs, folder, cursor, admin) {
   const has = (id) => fs.some((f) => f.id === id);
   const list = await env.KV.list({ prefix: "msg:", limit: 50, cursor });
   const all = await Promise.all(list.keys.map(async (k) => [k.name, await env.KV.get(k.name, "json")]));
   const files = [];
   for (const [key, v] of all) {
     if (!v) continue;
+    if (!admin && isPrivateMsg(v)) continue; // kiriman "Selamanya" hanya untuk admin
     norm(v);
     for (const f of v.files) {
       if (f.gone) continue;
@@ -42,7 +43,7 @@ export async function onRequestGet({ env, request }) {
   const folder = p.get("folder") || "";
   if (!folder) return json({ ok: true, folders: fs });
   if (!fs.some((f) => f.id === folder)) return bad("Folder tidak ditemukan.", 404);
-  return contents(env, fs, folder, p.get("cursor") || undefined);
+  return contents(env, fs, folder, p.get("cursor") || undefined, await canViewPrivate(env, request));
 }
 
 export async function onRequestPost({ env, request }) {
@@ -110,7 +111,7 @@ export async function onRequestPost({ env, request }) {
     return json({ ok: true, moved: n, item: pub(msg, key) });
   }
 
-  if (action === "contents") return contents(env, fs, p.get("folder") || "", p.get("cursor") || undefined);
+  if (action === "contents") return contents(env, fs, p.get("folder") || "", p.get("cursor") || undefined, true);
 
   return bad("Aksi tidak dikenal.");
 }

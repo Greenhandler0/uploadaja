@@ -1,7 +1,7 @@
 // GET /api/file/:id
 // - File biasa: tampil/unduh, mendukung Range untuk video/audio
 // - File "sekali unduh": hanya lewat ?dl=1, lalu otomatis dihapus dari KV
-import { norm, putMsg, getFile, delFile } from "../../_lib/common.js";
+import { norm, putMsg, getFile, delFile, canViewPrivate, isPrivateMsg } from "../../_lib/common.js";
 
 const INLINE = /^(image\/(?!svg)|video\/|audio\/)|^application\/pdf$/;
 
@@ -20,6 +20,16 @@ async function consume(env, id, meta) {
 export async function onRequestGet({ env, params, request, waitUntil }) {
   const { value, metadata } = await getFile(env, params.id);
   if (!value) return new Response("File tidak ditemukan atau sudah dihapus.", { status: 404 });
+
+  // File dari kiriman "Selamanya" bersifat privat: hanya admin. Non-admin dibalas 404 (sama seperti file tidak ada).
+  // File tanpa kiriman induk (yatim) juga hanya untuk admin. File lama tanpa msgKey tidak bisa dicek (dianggap publik).
+  const NOT_FOUND = () => new Response("File tidak ditemukan atau sudah dihapus.", { status: 404, headers: { "cache-control": "no-store" } });
+  let priv = false;
+  if (metadata && metadata.msgKey) {
+    const msg = await env.KV.get(metadata.msgKey, "json");
+    priv = !msg || isPrivateMsg(msg);
+  }
+  if (priv && !(await canViewPrivate(env, request))) return NOT_FOUND();
 
   const type = (metadata && metadata.type) || "application/octet-stream";
   const name = (metadata && metadata.name) || "file";
@@ -47,7 +57,7 @@ export async function onRequestGet({ env, params, request, waitUntil }) {
     "content-disposition": disp(INLINE.test(type) ? "inline" : "attachment"),
     "x-content-type-options": "nosniff",
     "accept-ranges": "bytes",
-    "cache-control": "public, max-age=3600",
+    "cache-control": priv ? "private, no-store" : "public, max-age=3600",
   };
   const range = request.headers.get("range");
   const m = range && /bytes=(\d*)-(\d*)/.exec(range);

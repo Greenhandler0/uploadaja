@@ -3,7 +3,7 @@
 // POST   /api/messages                    -> buat kiriman baru (teks + maks. 1 file pertama)
 // POST   /api/messages?attach=msg:...     -> tambah file ke kiriman yang sama (butuh token dari POST pertama)
 // DELETE /api/messages?key=msg:...        -> hapus kiriman + semua filenya (admin)
-import { DAY, json, isAdmin, norm, pub, putMsg, expOpt, liveFiles, putFile, delFile, partsOf } from "../_lib/common.js";
+import { DAY, json, isAdmin, canViewPrivate, isPrivateMsg, norm, pub, putMsg, expOpt, liveFiles, putFile, delFile, partsOf } from "../_lib/common.js";
 
 const MAX_FILE = 30 * 1024 * 1024; // 30 MB per file (disimpan berpotongan 16 MiB karena batas KV 25 MiB per nilai)
 const MAX_FILES = 30;              // file per kiriman
@@ -15,21 +15,27 @@ const ATTACH_WINDOW = 2 * 3600 * 1000; // file tambahan hanya diterima 2 jam sej
 
 export async function onRequestGet({ env, request }) {
   const u = new URL(request.url);
+  const admin = await canViewPrivate(env, request); // kiriman "Selamanya" hanya terlihat oleh admin
   const one = u.searchParams.get("key");
   if (one) {
     if (!one.startsWith("msg:")) return json({ error: "Key tidak valid." }, 400);
     const v = await env.KV.get(one, "json");
-    return v ? json(pub(v, one, false)) : json({ error: "Pesan tidak ditemukan." }, 404);
+    // Bagi non-admin, kiriman privat dibalas sama seperti "tidak ada" agar keberadaannya tidak bocor.
+    return v && (admin || !isPrivateMsg(v)) ? json(pub(v, one, false)) : json({ error: "Pesan tidak ditemukan." }, 404);
   }
-  const cursor = u.searchParams.get("cursor") || undefined;
-  const list = await env.KV.list({ prefix: "msg:", limit: 20, cursor });
-  const items = await Promise.all(
-    list.keys.map(async (k) => {
-      const v = await env.KV.get(k.name, "json");
-      return v ? pub(v, k.name, true) : null;
-    })
-  );
-  return json({ items: items.filter(Boolean), cursor: list.list_complete ? null : list.cursor });
+  let cursor = u.searchParams.get("cursor") || undefined;
+  const items = [];
+  let complete = false;
+  // Non-admin: kiriman privat dilewati, jadi pindai beberapa batch sampai halaman terisi.
+  for (let i = 0; i < 5 && items.length < 20 && !complete; i++) {
+    const list = await env.KV.list({ prefix: "msg:", limit: 20, cursor });
+    const got = await Promise.all(list.keys.map(async (k) => [k.name, await env.KV.get(k.name, "json")]));
+    for (const [name, v] of got) if (v && (admin || !isPrivateMsg(v))) items.push(pub(v, name, true));
+    complete = list.list_complete;
+    cursor = complete ? undefined : list.cursor;
+    if (admin) break; // admin tidak ada yang disaring, satu batch cukup
+  }
+  return json({ items, cursor: complete ? null : cursor || null });
 }
 
 function checkFile(file) {

@@ -4,19 +4,32 @@
 //   delfile&key=msg:..&fid=..      hapus SATU file dari kiriman (teks & file lain tetap)
 //   ttl&key=msg:..&days=N[&fid=..] ubah masa simpan; dengan fid = file itu saja, tanpa fid = catatan kiriman. N=0 selamanya
 //   orphans[&del=1][&cursor=]      cari/hapus file yatim (file tanpa kiriman)
-import { DAY, json, isAdmin, norm, pub, putMsg, getFile, putFile, delFile, partsOf } from "../_lib/common.js";
+import { DAY, json, isAdmin, adminToken, adminCookie, clearAdminCookie, norm, pub, putMsg, getFile, putFile, delFile, partsOf } from "../_lib/common.js";
 
 const TTL_OK = [1, 7, 30, 90, 365, 0];
 const bad = (m, s = 400) => json({ error: m }, s);
 
 export async function onRequestPost({ env, request }) {
-  if (!isAdmin(env, request)) return bad("Kunci admin salah.", 401);
   const p = new URL(request.url).searchParams;
   const action = p.get("action") || "check";
+
+  // Keluar: hapus cookie sesi admin (tidak butuh kunci; hanya menghapus cookie milik browser sendiri).
+  if (action === "logout") {
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "set-cookie": clearAdminCookie() },
+    });
+  }
+
+  if (!isAdmin(env, request)) return bad("Kunci admin salah.", 401);
   const key = p.get("key") || "";
   const cursor = p.get("cursor") || undefined;
 
-  if (action === "check") return json({ ok: true });
+  // Masuk: pasang cookie sesi supaya gambar/video/link unduhan file privat ("Selamanya") bisa dibuka admin.
+  if (action === "check") {
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "set-cookie": adminCookie(await adminToken(env)) },
+    });
+  }
 
   if (action === "stats") {
     const list = await env.KV.list({ prefix: "msg:", limit: 50, cursor });
@@ -57,7 +70,7 @@ export async function onRequestPost({ env, request }) {
     if (fid) { // satu file: tulis ulang dengan masa simpan baru
       const { value, metadata } = await getFile(env, fid);
       if (!value) return json({ ok: true, skipped: true });
-      await putFile(env, fid, value, metadata, opt);
+      await putFile(env, fid, value, { ...metadata, msgKey: key }, opt);
       return json({ ok: true });
     }
     const msg = norm(await env.KV.get(key, "json"));
