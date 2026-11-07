@@ -59,7 +59,7 @@ a.btn{text-decoration:none}
 @media(max-width:560px){.nav .lbl{display:none}.nav .btn{padding:0 10px}}
 
 /* ---------- Layout ---------- */
-.wrap{max-width:980px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:16px}
+.wrap{max-width:1080px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:16px}
 @media(min-width:920px){.wrap{grid-template-columns:340px minmax(0,1fr);align-items:start}.compose{position:sticky;top:68px}}
 
 /* ---------- Composer ---------- */
@@ -236,7 +236,7 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 
 /* ---- Pintasan website (khusus admin), ringkas satu baris ---- */
-.shortcuts{display:flex;align-items:center;gap:4px;padding:0 2px}
+.shortcuts{grid-column:1/-1;display:flex;align-items:center;gap:4px;padding:0 2px}
 .sgrid{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1;min-width:0}
 .sitem{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--panel);max-width:100%}
 .sitem:hover{border-color:var(--accent);background:var(--tint)}
@@ -265,3 +265,25 @@ dialog::backdrop{background:rgba(10,16,28,.55);-webkit-backdrop-filter:blur(2px)
 .vgrid video{display:block;width:100%;max-height:300px;background:#000}
 .grid+.vgrid,.vgrid+.flist{border-top:1px solid var(--line)}
 .flist:empty{display:none}
+
+/* ---- Desktop: folder jadi kartu berkolom, dialog lebih lebar ---- */
+@media(min-width:760px){
+  #fdlg{width:min(980px,94vw)}
+  #ffiles{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;align-items:stretch}
+  .fitem{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .fitem .fbar{flex:1;align-content:flex-start}
+  .fitem:hover{background:var(--panel);border-color:var(--accent)}
+  .fitem .fprev{aspect-ratio:4/3;margin:0;border-radius:0;display:block;min-height:0;background:#0b0f19}
+  .fitem .fprev.ph{min-height:0}
+  .fitem .fprev a{height:100%}
+  .fitem .fprev img{width:100%;height:100%;max-height:none;object-fit:contain}
+  .fitem .fprev video{width:100%;height:100%;max-height:none;object-fit:contain}
+  .fitem .fprev audio{margin:0;position:absolute}
+  .fitem .fbar{flex-wrap:wrap;padding:8px 10px;border-radius:0}
+  .fitem .fbar:hover{background:var(--tint)}
+  .fitem .fbar .t{flex:1 1 calc(100% - 90px)}
+  .fitem .fbar .btn.dl{flex:1}
+  .fitem .fbar .btn.sm{height:32px}
+  .att,.att.multi{max-width:560px}
+}
+@media(min-width:760px){.fitem .fprev:has(audio){aspect-ratio:auto;padding:10px;background:var(--soft)}.fitem .fprev audio{position:static;width:100%}}
