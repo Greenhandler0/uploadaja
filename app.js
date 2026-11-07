@@ -176,6 +176,26 @@ function goneBox(text) { const g = el("div", "gone"); g.appendChild(ico("trash",
 
 const INL = /^(image\/(?!svg)|video\/|audio\/)|^application\/pdf$/;
 const isImg = (t) => /^image\//.test(t) && !/svg/.test(t);
+// Jenis media untuk pratinjau: dari tipe MIME, atau dari ekstensi bila tipe kosong/umum.
+const IMG_EXT = /\.(jpe?g|png|gif|webp|avif|bmp)$/i, VID_EXT = /\.(mp4|m4v|mov|webm|ogv|3gp|mkv)$/i, AUD_EXT = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i;
+function kindOf(f) {
+  const t = f.type || "", n = f.name || "";
+  if (isImg(t) || (!/^(image|video|audio)\//.test(t) && IMG_EXT.test(n))) return "img";
+  if (/^video\//.test(t) || (!/^(image|video|audio)\//.test(t) && VID_EXT.test(n))) return "vid";
+  if (/^audio\//.test(t) || (!/^(image|video|audio)\//.test(t) && AUD_EXT.test(n))) return "aud";
+  return "";
+}
+// Video/audio baru dimuat saat mendekati layar, supaya puluhan video tidak diminta sekaligus.
+const lazyIO = "IntersectionObserver" in window
+  ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { lazyIO.unobserve(e.target); e.target.src = e.target.dataset.src; } }), { rootMargin: "300px" })
+  : null;
+function lazyMedia(tag, url) {
+  const m = document.createElement(tag); m.controls = true; m.preload = "metadata";
+  if (tag === "video") m.playsInline = true;
+  const src = tag === "video" ? url + "#t=0.1" : url; // #t=0.1: tampilkan bingkai pertama sebagai pratinjau (juga di iOS)
+  if (lazyIO) { m.dataset.src = src; lazyIO.observe(m); } else m.src = src;
+  return m;
+}
 const goneText = (f) => (f.reason === "cleanup" || f.reason === "admin" ? "Dihapus admin: " : "Sudah diunduh dan dihapus: ") + f.name;
 
 function fileBar(m, f, row, att, single) {
@@ -285,18 +305,24 @@ function attachments(m, body, row) {
   }
   att.appendChild(sum);
 
-  const imgs = m.oneTime ? [] : live.filter(f => isImg(f.type));
+  const imgs = m.oneTime ? [] : live.filter(f => kindOf(f) === "img");
   if (imgs.length) {
     const g = el("div", "grid" + (imgs.length === 1 ? " n1" : ""));
     g.style.gridTemplateColumns = "repeat(" + Math.min(3, imgs.length) + ",1fr)";
-    imgs.slice(0, 6).forEach((f, i) => {
+    imgs.forEach((f, i) => {
       const a = el("a", "tile"); a.href = f.url; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Buka " + f.name);
       const im = document.createElement("img"); im.src = f.url; im.loading = "lazy"; im.alt = f.name; a.appendChild(im);
-      if (i === 5 && imgs.length > 6) a.appendChild(el("span", "more", "+" + (imgs.length - 6)));
+      if (i >= 6) a.classList.add("hid");
+      if (i === 5 && imgs.length > 6) { // tile "+N": ketuk sekali untuk menampilkan semua foto
+        const mo = el("span", "more", "+" + (imgs.length - 6)); a.appendChild(mo);
+        a.addEventListener("click", (e) => { e.preventDefault(); g.querySelectorAll(".tile.hid").forEach(t => t.classList.remove("hid")); mo.remove(); }, { once: true });
+      }
       g.appendChild(a);
     });
     att.appendChild(g);
   }
+  const vids = m.oneTime ? [] : live.filter(f => kindOf(f) === "vid");
+  if (vids.length) { const vg = el("div", "vgrid"); vids.forEach(f => vg.appendChild(lazyMedia("video", f.url))); att.appendChild(vg); }
 
   const LIM = 5, list = el("div", "flist");
   fs.forEach((f, i) => { const n = f.gone ? goneBox(goneText(f)) : fileBar(m, f, row, att, false); if (i >= LIM) n.hidden = true; list.appendChild(n); });
@@ -584,7 +610,7 @@ $("bulkDel").addEventListener("click", async () => {
 function showAdmin(on) {
   $("loginRow").hidden = on; $("tools").hidden = !on;
   $("adminBtn").classList.toggle("on", on);
-  syncLocks(); updateBulk(); if (on) loadFolders();
+  syncLocks(); updateBulk(); if (on) { loadFolders(); loadShortcuts(); } else hideShortcuts();
 }
 $("adminBtn").addEventListener("click", () => { dlg.showModal(); if (!adminKey) $("key").focus(); });
 $("dclose").addEventListener("click", () => dlg.close());
@@ -762,18 +788,27 @@ async function fullText(it) {
 }
 const iid = (it) => it.key + "|" + (it.file ? it.file.id : "@text");
 async function openF(id) { fcur = id || ""; fsel.clear(); fitems = []; fcursor = null; renderF(); await loadF(false); }
+let fbusy = false;
 async function loadF(more) {
-  const tok = ++ftok; let c = more ? fcursor : null, got = 0, done = false;
-  if (!fcur && !adminKey) { $("fmore").hidden = true; setMsg("fstatus", ""); renderF(); return; } // publik: file tanpa folder ada di daftar utama
-  for (let i = 0; i < 6 && !done && got < 15; i++) {
-    setMsg("fstatus", "Memuat file...");
-    const r = await fApi("contents", { folder: fcur, ...(c ? { cursor: c } : {}) });
-    if (tok !== ftok) return;
-    if (!r.ok) { setMsg("fstatus", r.d.error || "Gagal memuat.", true); return; }
-    fitems = fitems.concat(r.d.files); got += r.d.files.length; done = r.d.done; c = r.d.cursor;
-  }
-  fcursor = c; $("fmore").hidden = done;
-  setMsg("fstatus", fitems.length || !done ? "" : "Tidak ada isi di sini."); renderF();
+  if (more && fbusy) return;
+  const tok = ++ftok; let c = more ? fcursor : null, got = 0, done = false; fbusy = true;
+  try {
+    if (!fcur && !adminKey) { $("fmore").hidden = true; setMsg("fstatus", ""); renderF(); return; } // publik: file tanpa folder ada di daftar utama
+    for (let i = 0; i < 6 && !done && got < 15; i++) {
+      setMsg("fstatus", "Memuat file...");
+      const r = await fApi("contents", { folder: fcur, ...(c ? { cursor: c } : {}) });
+      if (tok !== ftok) return;
+      if (!r.ok) { setMsg("fstatus", r.d.error || "Gagal memuat.", true); return; }
+      fitems = fitems.concat(r.d.files); got += r.d.files.length; done = r.d.done; c = r.d.cursor;
+    }
+    fcursor = c; $("fmore").hidden = done;
+    setMsg("fstatus", fitems.length || !done ? "" : "Tidak ada isi di sini."); renderF();
+  } finally { if (tok === ftok) { fbusy = false; setTimeout(autoMore, 150); } }
+}
+// Muat otomatis batch berikutnya saat tombol "Muat lagi" mendekati layar, jadi semua foto/video muncul tanpa perlu menekan tombol.
+function autoMore() {
+  const b = $("fmore"); if (b.hidden || fbusy || !fdlg.open) return;
+  const r = b.getBoundingClientRect(); if (r.height && r.top < window.innerHeight + 300) loadF(true);
 }
 function fBtn(text, fn, cls) { const b = el("button", "btn " + (cls || "ghost sm"), text); b.type = "button"; b.addEventListener("click", fn); return b; }
 async function fDo(action, params, okMsg) {
@@ -839,9 +874,26 @@ function renderF() {
     if (!it.oneTime && INL.test(it.file.type)) { op = el("a", "btn ghost sm", "Buka"); op.href = it.file.url; op.target = "_blank"; op.rel = "noopener"; }
     row.append(cb, lead, t);
     if (!it.oneTime && isTextFile(it.file)) { const cp = fBtn("Salin teks", () => copyFileText(it.file, cp)); cp.title = "Salin isi file ke papan klip"; row.appendChild(cp); }
-    if (op) row.appendChild(op); row.appendChild(dl); fb.appendChild(row);
+    if (!op && !it.oneTime && kindOf(it.file)) { op = el("a", "btn ghost sm", "Buka"); op.href = it.file.url; op.target = "_blank"; op.rel = "noopener"; }
+    if (op) row.appendChild(op); row.appendChild(dl);
+    const wrap = el("div", "fitem"), pv = fPreview(it); if (pv) wrap.appendChild(pv);
+    wrap.appendChild(row); fb.appendChild(wrap);
   });
   updF();
+}
+// Pratinjau di dalam folder: foto tampil besar (ketuk = buka), video & audio bisa langsung diputar. File "sekali unduh" tidak dipratinjau.
+function fPreview(it) {
+  if (it.oneTime) return null;
+  const f = it.file, k = kindOf(f); if (!k) return null;
+  const pv = el("div", "fprev");
+  if (k === "img") {
+    pv.classList.add("ph");
+    const a = el("a"); a.href = f.url; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Buka " + f.name);
+    const im = document.createElement("img"); im.src = f.url; im.loading = "lazy"; im.alt = f.name;
+    im.addEventListener("load", () => pv.classList.remove("ph")); im.addEventListener("error", () => { pv.classList.remove("ph"); pv.replaceChildren(el("span", "msg", "Pratinjau tidak bisa dimuat. Coba tombol Buka atau Unduh.")); });
+    a.appendChild(im); pv.appendChild(a);
+  } else pv.appendChild(lazyMedia(k === "vid" ? "video" : "audio", f.url));
+  return pv;
 }
 function updF() { const n = fsel.size; $("fmv").disabled = !n; $("fmv").textContent = n ? "Pindahkan terpilih (" + n + ")" : "Pindahkan terpilih"; }
 
@@ -849,6 +901,7 @@ $("fopen").addEventListener("click", async () => { await loadFolders(); fdlg.sho
 $("fdclose").addEventListener("click", () => fdlg.close());
 fdlg.addEventListener("click", (e) => { if (e.target === fdlg) fdlg.close(); });
 $("fmore").addEventListener("click", () => loadF(true));
+fdlg.addEventListener("scroll", autoMore, { passive: true });
 $("fnew").addEventListener("click", () => { const n = prompt("Nama folder baru" + (fcur ? " (di dalam " + fById(fcur).name + ")" : "") + ":"); if (n && n.trim()) fDo("create", { name: n.trim(), parent: fcur }, "Folder dibuat."); });
 $("fall").addEventListener("click", () => { const all = fitems.length && fitems.every((it) => fsel.has(iid(it))); fitems.forEach((it) => all ? fsel.delete(iid(it)) : fsel.add(iid(it))); renderF(); });
 $("fmv").addEventListener("click", async () => {
@@ -860,6 +913,67 @@ $("fmv").addEventListener("click", async () => {
   toast(moved + " file dipindahkan" + (fail ? ", " + fail + " gagal" : "") + ".", !!fail);
   fsel.clear(); load(false); openF(fcur);
 });
+
+// ---- Pintasan website (khusus admin; server juga menolak non-admin) ----
+let shortcuts = [], sEditing = false, sEditId = "";
+const sdlg = $("sdlg");
+async function sApi(action, params) {
+  const q = new URLSearchParams({ action, ...(params || {}) });
+  try {
+    const r = await fetch("/api/shortcuts?" + q, { method: "POST", headers: { "x-admin-key": adminKey } });
+    return { ok: r.ok, d: await r.json().catch(() => ({})) };
+  } catch { return { ok: false, d: { error: "Koneksi terputus." } }; }
+}
+function hideShortcuts() { shortcuts = []; sEditing = false; $("shortcuts").hidden = true; $("sgrid").textContent = ""; }
+async function loadShortcuts() {
+  if (!adminKey) return;
+  const r = await fetch("/api/shortcuts", aHdr()).catch(() => null);
+  if (!r || !r.ok || !adminKey) return; // bukan admin / gagal: bagian ini tetap tersembunyi
+  const d = await r.json().catch(() => ({}));
+  shortcuts = d.items || []; $("shortcuts").hidden = false; renderShortcuts();
+}
+const sHost = (u) => { try { return new URL(u).host.replace(/^www\./, ""); } catch { return u; } };
+function renderShortcuts() {
+  const g = $("sgrid"); g.textContent = ""; g.classList.toggle("edit", sEditing);
+  setBtn($("sedit"), sEditing ? "check" : "edit", "");
+  $("sedit").hidden = !shortcuts.length;
+  if (!shortcuts.length) { g.appendChild(el("span", "sempty", "Pintasan website: tekan + untuk menambah")); return; }
+  shortcuts.forEach((it, i) => {
+    const box = el("div", "sitem"), a = el("a", "slink");
+    if (/^https?:\/\//i.test(it.url)) a.href = it.url;
+    a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = it.url;
+    a.append(...(it.icon ? [it.icon] : []), el("span", "", it.name)); box.appendChild(a);
+    const ac = el("span", "sacts");
+    const b = (icon, label, fn, off) => { const x = el("button", "btn ghost icon"); x.type = "button"; x.title = label; x.setAttribute("aria-label", label + " " + it.name); x.appendChild(ico(icon, true)); x.disabled = !!off; x.addEventListener("click", fn); return x; };
+    ac.append(b("up", "Naikkan", () => sDo("move", { id: it.id, dir: "up" }), i === 0), b("downc", "Turunkan", () => sDo("move", { id: it.id, dir: "down" }), i === shortcuts.length - 1), b("edit", "Ubah", () => sOpen(it)), b("trash", "Hapus", () => { if (confirm('Hapus pintasan "' + it.name + '"?')) sDo("delete", { id: it.id }, "Pintasan dihapus."); }));
+    box.appendChild(ac); g.appendChild(box);
+  });
+}
+async function sDo(action, params, okMsg) {
+  const r = await sApi(action, params);
+  if (r.ok) { shortcuts = r.d.items || shortcuts; renderShortcuts(); if (okMsg) toast(okMsg); } else toast(r.d.error || "Gagal.", true);
+  return r.ok;
+}
+function sOpen(it) {
+  sEditId = it ? it.id : ""; $("sdtitle").textContent = it ? "Ubah website" : "Tambah website";
+  $("sname").value = it ? it.name : ""; $("surl").value = it ? it.url : ""; $("sicon").value = it && it.icon ? it.icon : "";
+  setMsg("sstatus2", ""); sdlg.showModal(); $("sname").focus();
+}
+async function sSave() {
+  const name = $("sname").value.trim(), url = $("surl").value.trim(), icon = $("sicon").value.trim();
+  if (!name || !url) { setMsg("sstatus2", "Isi nama dan alamat website.", true); return; }
+  $("ssave").disabled = true; setMsg("sstatus2", "Menyimpan...");
+  const edit = !!sEditId, r = await sApi(edit ? "edit" : "add", { ...(edit ? { id: sEditId } : {}), name, url, icon });
+  $("ssave").disabled = false;
+  if (r.ok) { shortcuts = r.d.items || shortcuts; renderShortcuts(); sdlg.close(); toast(edit ? "Pintasan diubah." : "Pintasan ditambahkan."); }
+  else setMsg("sstatus2", r.d.error || "Gagal menyimpan.", true);
+}
+$("sadd").addEventListener("click", () => sOpen(null));
+$("sedit").addEventListener("click", () => { sEditing = !sEditing; renderShortcuts(); });
+$("ssave").addEventListener("click", sSave);
+["sname", "surl", "sicon"].forEach((id) => $(id).addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sSave(); } }));
+$("sdclose").addEventListener("click", () => sdlg.close());
+sdlg.addEventListener("click", (e) => { if (e.target === sdlg) sdlg.close(); });
 
 showAdmin(!!adminKey);
 const boot = () => loadFolders().then(() => load(false), () => load(false));

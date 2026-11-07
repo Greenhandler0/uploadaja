@@ -8,6 +8,7 @@ Struktur (folder proyek: upload-aja):
   functions/api/messages.js
   functions/api/admin.js          (BARU: statistik, hapus 1 file, ubah masa simpan, file yatim)
   functions/api/folders.js        (BARU: folder untuk mengelompokkan file, khusus admin)
+  functions/api/shortcuts.js      (BARU: pintasan website, khusus admin)
   functions/api/cleanup.js
   functions/api/file/[id].js
 
@@ -82,3 +83,18 @@ Struktur (folder proyek: upload-aja):
 - Mengubah masa simpan kiriman dari/ke Selamanya langsung mengubah visibilitasnya. Respons file privat memakai `private, no-store`.
 - File tanpa kiriman induk (yatim) juga hanya bisa dibuka admin.
 - Catatan: file lama dari versi awal yang tidak punya `msgKey` di metadata tidak bisa dicek statusnya (dianggap publik). Mengubah masa simpannya lewat menu Admin akan mengisi `msgKey` otomatis.
+
+## Pembaruan: foto & video langsung tampil/bisa diputar (juga di dalam folder)
+- Di dalam folder, setiap foto tampil sebagai pratinjau besar (ketuk = buka ukuran penuh) dan setiap video/audio punya pemutar sendiri, jadi tidak perlu klik "Buka" dulu.
+- Jenis file dikenali dari tipe MIME, atau dari ekstensi (mp4, mov, webm, jpg, png, dst.) bila tipe-nya kosong/umum.
+- Video/audio baru dimuat saat mendekati layar (hemat bandwidth & pembacaan KV). Bingkai pertama video tampil sebagai pratinjau.
+- Isi folder dimuat otomatis saat di-scroll; tombol "Muat lagi" tetap ada sebagai cadangan.
+- Kiriman banyak file di daftar utama: semua foto bisa dibuka (ketuk tile "+N" untuk menampilkan seluruhnya) dan video punya pemutar langsung.
+- File "sekali unduh" tetap TIDAK dipratinjau (membuka = menghabiskan file).
+
+## Pembaruan: Pintasan website (khusus admin)
+- Muncul di bagian atas halaman utama ("Website saya") HANYA setelah login admin. Pengunjung biasa tidak melihatnya.
+- Dicek di server: GET /api/shortcuts dibalas 404 untuk non-admin, dan semua aksi ubah (tambah/ubah/hapus/geser) wajib header x-admin-key. Daftar link tidak dikirim ke browser non-admin sama sekali.
+- Tombol "Tambah": isi nama, alamat (https:// dilengkapi otomatis), dan ikon emoji (opsional). Tombol "Atur": geser urutan, ubah, hapus.
+- Hanya alamat http/https yang diterima (javascript:, data:, dll. ditolak). Link dibuka di tab baru. Maks. 60 pintasan.
+- Disimpan di key KV "shortcuts" (satu daftar), jadi sama di semua perangkat. Tidak perlu binding/variabel baru.
